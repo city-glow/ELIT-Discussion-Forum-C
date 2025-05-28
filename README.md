@@ -14,7 +14,7 @@ Forum Diskusi ELIT adalah aplikasi forum diskusi berbasis CLI (Command Line Inte
 - **Sistem Voting**
   Mekanisme upvote/downvote untuk menentukan relevansi konten
 - **Moderasi Konten**
-  Antrian moderasi dengan akses kontrol untuk owner & moderator
+  Antrian moderasi dengan akses kontrol untuk owner
 - **Notifikasi Realtime**
   Sistem stack untuk notifikasi terbaru yang otomatis terupdate
 - **Pencarian & Trending**
