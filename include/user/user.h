@@ -13,4 +13,6 @@ typedef struct {
     NotifStack notifications;
 } User;
 
+void create_user(User *user, char *username, char *hashed_password, char *profile_picture);
+
 #endif

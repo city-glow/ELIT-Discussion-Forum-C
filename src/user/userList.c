@@ -122,7 +122,7 @@ void del_akhir(UserAddress *p, User *X) {
   }
 }
 
-void del_After(UserAddress *pBef, User *X) {
+void del_after(UserAddress *pBef, User *X) {
   UserAddress temp = (**pBef).next;
   (**pBef).next = (*temp).next;
   *X = (*temp).info;
@@ -145,7 +145,7 @@ int count(UserAddress p) {
   }
 }
 
-UserAddress BalikList(UserAddress p) {
+UserAddress balik_list(UserAddress p) {
   if (!is_empty(p)) {
     UserAddress prev = NULL;
     UserAddress this = p;

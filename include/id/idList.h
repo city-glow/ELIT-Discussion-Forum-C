@@ -4,7 +4,7 @@
 
 typedef struct IdTElmtList *IdAddress;
 typedef struct IdTElmtList {
-  id info;
+  Id info;
   IdAddress nextId;
 } IdElmtList;
 typedef IdAddress IdList;
