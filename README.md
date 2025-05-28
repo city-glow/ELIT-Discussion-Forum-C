@@ -2,7 +2,7 @@
 **Versi 0.1 (WIP - Work In Progress)**
 
 ## Deskripsi
-ELIT (Enhanced Lightweight Interactive Thread) adalah aplikasi forum diskusi berbasis CLI (Command Line Interface) yang dikembangkan menggunakan bahasa pemrograman C. Dirancang sebagai alat pembelajaran untuk implementasi struktur data dan algoritma, aplikasi ini menawarkan pengalaman diskusi cepat dan ringan tanpa ketergantungan pada antarmuka grafis.
+Forum Diskusi ELIT adalah aplikasi forum diskusi berbasis CLI (Command Line Interface) yang dikembangkan menggunakan bahasa pemrograman C. Dirancang sebagai alat pembelajaran untuk implementasi struktur data dan algoritma, aplikasi ini menawarkan pengalaman diskusi cepat dan ringan tanpa ketergantungan pada antarmuka grafis.
 
 ## Fitur Utama
 - **Autentikasi Pengguna**

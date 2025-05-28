@@ -8,7 +8,7 @@ typedef struct {
     Id id;
     char username[MAX_USERNAME + 1];
     char hashed_password[128];
-    char profile_picture[200];
+    char profile_picture[256];
     IdList followings;
     NotifStack notifications;
 } User;
