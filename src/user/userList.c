@@ -1,36 +1,35 @@
 #ifndef USERLIST_C
 #define USERLIST_C
-#include <stddef.h> // For NULL
 #include "../../include/user/userList.h"
-#include <stdlib.h>
+#include <stddef.h> // For NULL
 #include <stdio.h>
+#include <stdlib.h>
 
-bool is_empty(UserAddress p) { return (p == NULL); }
+bool user_is_empty(UserAddress p) { return (p == NULL); }
 
-void create_list(UserList *p) {
+void user_create_list(UserList *p) {
   p->first = NULL;
   p->id_max = 0;
 }
 
-void create_node(UserAddress *p) {
+void user_create_node(UserAddress *p) {
   *p = (UserAddress)malloc(sizeof(UserElmtList));
 }
 
-void isi_node(UserAddress *p, User nilai) {
+void user_isi_node(UserAddress *p, User nilai) {
   if (*p != NULL) {
     (**p).info = nilai;
     (**p).next = NULL;
   }
 }
 
-void tampil_list(UserAddress p) {
- if (is_empty(p)) {
+void user_tampil_list(UserAddress p) {
+  if (user_is_empty(p)) {
     printf("NULL\n");
   } else {
 
-      printf("%s -> ", (*p).info.username);
-      tampil_list((*p).next);
-
+    printf("%s -> ", (*p).info.username);
+    user_tampil_list((*p).next);
   }
 }
 
@@ -39,32 +38,31 @@ void insert_awal(UserAddress *p, UserAddress PNew) {
   *p = PNew;
 }
 
-void insert(UserList *p, UserAddress PNew) {
-    (*p).id_max += 1;
-    PNew->info.id = p->id_max;
-    insert_akhir(&(p->first), PNew);
-}
-
 void insert_akhir(UserAddress *p, UserAddress PNew) {
-  if (is_empty(*p)) {
+  if (user_is_empty(*p)) {
     *p = PNew;
   } else {
     UserAddress temp = *p;
-    while (!is_empty((*temp).next)) {
+    while (!user_is_empty((*temp).next)) {
       temp = (*temp).next;
     }
     (*temp).next = PNew;
   }
 }
 
-UserAddress search_by_id(UserAddress p, Id nilai) {
-  while (!is_empty(p)) {
+UserAddress user_search_by_id(UserAddress p, Id nilai) {
+  while (!user_is_empty(p)) {
     if (p->info.id == nilai) {
       return p;
     }
     p = (*p).next;
   }
   return NULL;
+}
+void user_insert(UserList *p, UserAddress PNew) {
+  (*p).id_max += 1;
+  PNew->info.id = p->id_max;
+  insert_akhir(&(p->first), PNew);
 }
 
 void insert_after(UserAddress *pBef, UserAddress PNew) {
@@ -73,7 +71,7 @@ void insert_after(UserAddress *pBef, UserAddress PNew) {
 }
 
 void del_awal(UserAddress *p, User *X) {
-  if (!is_empty(*p)) {
+  if (!user_is_empty(*p)) {
     *X = (**p).info;
     UserAddress temp = *p;
     *p = (**p).next;
@@ -82,28 +80,9 @@ void del_awal(UserAddress *p, User *X) {
   }
 }
 
-void delete_by_address(UserAddress *p, UserAddress pDel, User *X) {
-
-    if (is_empty(*p) || is_empty(pDel))
-        return;
-
-      if (*p == pDel) {
-        del_awal(p, X);
-      } else {
-        UserAddress temp = *p;
-        while (temp->next != NULL && temp->next != pDel) {
-          temp = temp->next;
-        }
-
-        if (temp->next == pDel) {
-          del_after(&temp, X);
-        }
-      }
-}
-
 void del_akhir(UserAddress *p, User *X) {
-  if (!is_empty(*p)) {
-    if (is_empty((**p).next)) {
+  if (!user_is_empty(*p)) {
+    if (user_is_empty((**p).next)) {
       printf("yellow!");
       *X = (**p).info;
       free(*p);
@@ -111,7 +90,7 @@ void del_akhir(UserAddress *p, User *X) {
     } else {
       UserAddress prev;
       UserAddress last = *p;
-      while (!is_empty((*last).next)) {
+      while (!user_is_empty((*last).next)) {
         prev = last;
         last = (*last).next;
       }
@@ -130,27 +109,50 @@ void del_after(UserAddress *pBef, User *X) {
   free(temp);
 }
 
-void deallocation(UserAddress *p) {
-  while (!is_empty(*p)) {
+void delete_by_address(UserAddress *p, UserAddress pDel, User *X) {
+  if (user_is_empty(*p) || user_is_empty(pDel))
+    return;
+
+  if (*p == pDel) {
+    del_awal(p, X);
+  } else {
+    UserAddress temp = *p;
+    while (temp->next != NULL && temp->next != pDel) {
+      temp = temp->next;
+    }
+
+    if (temp->next == pDel) {
+      del_after(&temp, X);
+    }
+  }
+}
+
+void user_delete_by_id(UserAddress *p, Id nilai, User *X) {
+  UserAddress target = user_search_by_id(*p, nilai);
+  delete_by_address(p, target, X);
+}
+
+void user_deallocation(UserAddress *p) {
+  while (!user_is_empty(*p)) {
     User i;
     del_awal(p, &i);
   }
 }
 
-int count(UserAddress p) {
-  if (is_empty(p)) {
+int user_count(UserAddress p) {
+  if (user_is_empty(p)) {
     return 0;
   } else {
-    return 1 + count((*p).next);
+    return 1 + user_count((*p).next);
   }
 }
 
-UserAddress balik_list(UserAddress p) {
-  if (!is_empty(p)) {
+UserAddress user_balik_list(UserAddress p) {
+  if (!user_is_empty(p)) {
     UserAddress prev = NULL;
     UserAddress this = p;
     UserAddress next = (*p).next;
-    while (!is_empty(next)) {
+    while (!user_is_empty(next)) {
       (*this).next = prev;
       prev = this;
       this = next;

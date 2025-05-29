@@ -3,7 +3,7 @@
 
 #include "../user/userList.h"  // agar bisa akses UserList dan User
 
-bool register_user(UserList *list, char *username, char *password, char *profile_picture);
+bool register_user(UserList *list, char *username, char *password);
 bool login(UserList list, char *username, char *password, User *logged_user);
 
 #endif
