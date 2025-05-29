@@ -14,7 +14,7 @@ bool is_username_valid(char *username) {
     if (username[i] == ' ') {
       return false;
     }
-  }
+  } 
 
   return true;
 }
