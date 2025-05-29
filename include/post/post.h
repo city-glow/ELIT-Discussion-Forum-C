@@ -1,18 +1,16 @@
 #ifndef POST_H
-#define USER_H
-#include "../id/idList.h"
-#include "../notif/notifStack.h"
-#define MAX_USERNAME 100
+#define POST_H
+#define MAX_TITLE 100
+#include "../id/id.h"
 
 typedef struct {
     Id id;
-    char username[MAX_USERNAME + 1];
-    char hashed_password[128];
-    char profile_picture[256];
-    IdList followings;
-    NotifStack notifications;
-} User;
+    Id user_id;
+    Id board_id;
+    char title[MAX_TITLE + 1];
+    char *content;
+} Post;
 
-void create_user(User *user, char *username, char *hashed_password, char *profile_picture);
+void create_post(Post *post, Id user_id, Id board_id, char *title, char*content);
 
 #endif

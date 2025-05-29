@@ -5,6 +5,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+bool is_username_valid(char *username) {
+  if (username == NULL) {
+    return false;
+  }
+
+  for (int i = 0; username[i] != '\0'; i++) {
+    if (username[i] == ' ') {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Fungsi untuk mengecek apakah username sudah dipakai
 bool is_username_taken(UserList list, char *username) {
   UserAddress curr = list.first;
@@ -18,6 +32,12 @@ bool is_username_taken(UserList list, char *username) {
 }
 
 bool register_user(UserList *list, char *username, char *password) {
+
+  if (!is_username_valid(username)) {
+    printf("Username tidak boleh pakai spasi!.\n");
+    return false;
+  }
+
   if (is_username_taken(*list, username)) {
     printf("Username '%s' sudah digunakan.\n", username);
     return false;
@@ -53,7 +73,6 @@ bool login(UserList list, char *username, char *password, User *logged_user) {
   char hashed_input[65]; // 64 chars + null terminator
   for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
     sprintf(&hashed_input[i * 2], "%02x", hash[i]);
-
 
   // Search for user and compare hashed passwords
   UserAddress curr = list.first;
