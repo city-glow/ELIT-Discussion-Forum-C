@@ -8,7 +8,7 @@ CFLAGS = -Wall -Wextra -g
 LIBS = -lssl -lcrypto
 
 # Source files
-SRCS = src/main.c src/user/user.c src/user/userList.c src/auth/auth.c src/ui/ui.c
+SRCS = src/main.c src/user/user.c src/user/userList.c src/auth/auth.c src/ui/ui.c src/board/board.c src/board/boardList.c src/post/post.c src/post/postList.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)

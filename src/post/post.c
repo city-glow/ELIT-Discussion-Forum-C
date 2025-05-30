@@ -1,13 +1,13 @@
-#ifndef BOARD_C
-#define BOARD_C
-#include "../../include/board/board.h"
+#ifndef POST_C
+#define POST_C
+#include "../../include/post/post.h"
 #include <string.h>
-#include <stdio.h>
 
-void create_board(Board *board, Id owner_id, char *title) {
-    strcpy(board->title, title);
-    board->owner_id = owner_id;
-    board->queue = NULL;
+void create_post(Post *post, Id user_id, Id board_id, char* title, char *content) {
+    strcpy(post->title, title);
+    post->content = strdup(content);
+    post->user_id = user_id;
+    post->board_id = board_id;
 }
 
 #endif

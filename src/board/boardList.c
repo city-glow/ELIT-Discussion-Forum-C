@@ -4,41 +4,42 @@
 #include <stddef.h> // For NULL
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 bool board_is_empty(BoardAddress p) { return (p == NULL); }
 
-void Board_create_list(BoardList *p) {
+void board_create_list(BoardList *p) {
   p->first = NULL;
   p->id_max = 0;
 }
 
-void Board_create_node(BoardAddress *p) {
+void board_create_node(BoardAddress *p) {
   *p = (BoardAddress)malloc(sizeof(BoardElmtList));
 }
 
-void Board_isi_node(BoardAddress *p, Board nilai) {
+void board_isi_node(BoardAddress *p, Board nilai) {
   if (*p != NULL) {
     (**p).info = nilai;
     (**p).next = NULL;
   }
 }
 
-void Board_tampil_list(BoardAddress p) {
+void board_tampil_list(BoardAddress p) {
   if (board_is_empty(p)) {
     printf("NULL\n");
   } else {
 
     printf("%s -> ", (*p).info.title);
-    Board_tampil_list((*p).next);
+    board_tampil_list((*p).next);
   }
 }
 
-void insert_awal(BoardAddress *p, BoardAddress PNew) {
+void board_insert_awal(BoardAddress *p, BoardAddress PNew) {
   (*PNew).next = *p;
   *p = PNew;
 }
 
-void insert_akhir(BoardAddress *p, BoardAddress PNew) {
+void board_insert_akhir(BoardAddress *p, BoardAddress PNew) {
   if (board_is_empty(*p)) {
     *p = PNew;
   } else {
@@ -50,7 +51,7 @@ void insert_akhir(BoardAddress *p, BoardAddress PNew) {
   }
 }
 
-BoardAddress Board_search_by_id(BoardAddress p, Id nilai) {
+BoardAddress board_search_by_id(BoardAddress p, Id nilai) {
   while (!board_is_empty(p)) {
     if (p->info.id == nilai) {
       return p;
@@ -59,18 +60,36 @@ BoardAddress Board_search_by_id(BoardAddress p, Id nilai) {
   }
   return NULL;
 }
-void Board_insert(BoardList *p, BoardAddress PNew) {
-  (*p).id_max += 1;
-  PNew->info.id = p->id_max;
-  insert_akhir(&(p->first), PNew);
+
+BoardAddress board_search_by_title(BoardAddress p, char* title) {
+  while (!board_is_empty(p)) {
+    if (strcmp(p->info.title, title)) {
+      return p;
+    }
+    p = (*p).next;
+  }
+  return NULL;
 }
 
-void insert_after(BoardAddress *pBef, BoardAddress PNew) {
+void board_insert(BoardList *p, BoardAddress PNew) {
+  (*p).id_max += 1;
+  PNew->info.id = p->id_max;
+  board_insert_akhir(&(p->first), PNew);
+}
+
+int board_insert_and_get_id(BoardList *p, BoardAddress PNew) {
+  (*p).id_max += 1;
+  PNew->info.id = p->id_max;
+  board_insert_akhir(&(p->first), PNew);
+  return PNew->info.id;
+}
+
+void board_insert_after(BoardAddress *pBef, BoardAddress PNew) {
   (*PNew).next = (**pBef).next;
   (**pBef).next = PNew;
 }
 
-void del_awal(BoardAddress *p, Board *X) {
+void board_del_awal(BoardAddress *p, Board *X) {
   if (!board_is_empty(*p)) {
     *X = (**p).info;
     BoardAddress temp = *p;
@@ -80,7 +99,7 @@ void del_awal(BoardAddress *p, Board *X) {
   }
 }
 
-void del_akhir(BoardAddress *p, Board *X) {
+void board_del_akhir(BoardAddress *p, Board *X) {
   if (!board_is_empty(*p)) {
     if (board_is_empty((**p).next)) {
       printf("yellow!");
@@ -101,7 +120,7 @@ void del_akhir(BoardAddress *p, Board *X) {
   }
 }
 
-void del_after(BoardAddress *pBef, Board *X) {
+void board_del_after(BoardAddress *pBef, Board *X) {
   BoardAddress temp = (**pBef).next;
   (**pBef).next = (*temp).next;
   *X = (*temp).info;
@@ -109,12 +128,12 @@ void del_after(BoardAddress *pBef, Board *X) {
   free(temp);
 }
 
-void delete_by_address(BoardAddress *p, BoardAddress pDel, Board *X) {
+void board_delete_by_address(BoardAddress *p, BoardAddress pDel, Board *X) {
   if (board_is_empty(*p) || board_is_empty(pDel))
     return;
 
   if (*p == pDel) {
-    del_awal(p, X);
+    board_del_awal(p, X);
   } else {
     BoardAddress temp = *p;
     while (temp->next != NULL && temp->next != pDel) {
@@ -122,32 +141,32 @@ void delete_by_address(BoardAddress *p, BoardAddress pDel, Board *X) {
     }
 
     if (temp->next == pDel) {
-      del_after(&temp, X);
+      board_del_after(&temp, X);
     }
   }
 }
 
-void Board_delete_by_id(BoardAddress *p, Id nilai, Board *X) {
-  BoardAddress target = Board_search_by_id(*p, nilai);
-  delete_by_address(p, target, X);
+void board_delete_by_id(BoardAddress *p, Id nilai, Board *X) {
+  BoardAddress target = board_search_by_id(*p, nilai);
+  board_delete_by_address(p, target, X);
 }
 
-void Board_deallocation(BoardAddress *p) {
+void board_deallocation(BoardAddress *p) {
   while (!board_is_empty(*p)) {
     Board i;
-    del_awal(p, &i);
+    board_del_awal(p, &i);
   }
 }
 
-int Board_count(BoardAddress p) {
+int board_count(BoardAddress p) {
   if (board_is_empty(p)) {
     return 0;
   } else {
-    return 1 + Board_count((*p).next);
+    return 1 + board_count((*p).next);
   }
 }
 
-BoardAddress Board_balik_list(BoardAddress p) {
+BoardAddress board_balik_list(BoardAddress p) {
   if (!board_is_empty(p)) {
     BoardAddress prev = NULL;
     BoardAddress this = p;
@@ -163,4 +182,13 @@ BoardAddress Board_balik_list(BoardAddress p) {
   }
   return p;
 }
+
+bool get_board_by_id(BoardList p, Id nilai, Board *get) {
+    BoardAddress found = board_search_by_id(p.first, nilai);
+    if (!board_is_empty(found)) {
+        *get = found->info;
+    }
+    return !board_is_empty(found);
+}
+
 #endif

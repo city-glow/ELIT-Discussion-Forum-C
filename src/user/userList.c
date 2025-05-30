@@ -33,12 +33,12 @@ void user_tampil_list(UserAddress p) {
   }
 }
 
-void insert_awal(UserAddress *p, UserAddress PNew) {
+void user_insert_awal(UserAddress *p, UserAddress PNew) {
   (*PNew).next = *p;
   *p = PNew;
 }
 
-void insert_akhir(UserAddress *p, UserAddress PNew) {
+void user_insert_akhir(UserAddress *p, UserAddress PNew) {
   if (user_is_empty(*p)) {
     *p = PNew;
   } else {
@@ -62,15 +62,15 @@ UserAddress user_search_by_id(UserAddress p, Id nilai) {
 void user_insert(UserList *p, UserAddress PNew) {
   (*p).id_max += 1;
   PNew->info.id = p->id_max;
-  insert_akhir(&(p->first), PNew);
+  user_insert_akhir(&(p->first), PNew);
 }
 
-void insert_after(UserAddress *pBef, UserAddress PNew) {
+void user_insert_after(UserAddress *pBef, UserAddress PNew) {
   (*PNew).next = (**pBef).next;
   (**pBef).next = PNew;
 }
 
-void del_awal(UserAddress *p, User *X) {
+void user_del_awal(UserAddress *p, User *X) {
   if (!user_is_empty(*p)) {
     *X = (**p).info;
     UserAddress temp = *p;
@@ -80,7 +80,7 @@ void del_awal(UserAddress *p, User *X) {
   }
 }
 
-void del_akhir(UserAddress *p, User *X) {
+void user_del_akhir(UserAddress *p, User *X) {
   if (!user_is_empty(*p)) {
     if (user_is_empty((**p).next)) {
       printf("yellow!");
@@ -101,7 +101,7 @@ void del_akhir(UserAddress *p, User *X) {
   }
 }
 
-void del_after(UserAddress *pBef, User *X) {
+void user_del_after(UserAddress *pBef, User *X) {
   UserAddress temp = (**pBef).next;
   (**pBef).next = (*temp).next;
   *X = (*temp).info;
@@ -109,12 +109,12 @@ void del_after(UserAddress *pBef, User *X) {
   free(temp);
 }
 
-void delete_by_address(UserAddress *p, UserAddress pDel, User *X) {
+void user_delete_by_address(UserAddress *p, UserAddress pDel, User *X) {
   if (user_is_empty(*p) || user_is_empty(pDel))
     return;
 
   if (*p == pDel) {
-    del_awal(p, X);
+    user_del_awal(p, X);
   } else {
     UserAddress temp = *p;
     while (temp->next != NULL && temp->next != pDel) {
@@ -122,20 +122,20 @@ void delete_by_address(UserAddress *p, UserAddress pDel, User *X) {
     }
 
     if (temp->next == pDel) {
-      del_after(&temp, X);
+      user_del_after(&temp, X);
     }
   }
 }
 
 void user_delete_by_id(UserAddress *p, Id nilai, User *X) {
   UserAddress target = user_search_by_id(*p, nilai);
-  delete_by_address(p, target, X);
+  user_delete_by_address(p, target, X);
 }
 
 void user_deallocation(UserAddress *p) {
   while (!user_is_empty(*p)) {
     User i;
-    del_awal(p, &i);
+    user_del_awal(p, &i);
   }
 }
 
