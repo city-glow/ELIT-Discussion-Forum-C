@@ -1,44 +1,63 @@
 # Compiler
 CC = gcc
 
-# Compiler flags
-CFLAGS = -Wall -Wextra -g -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/openssl"
+# Detect OS
+ifeq ($(OS),Windows_NT)
+	# Windows settings
+	CFLAGS = -Wall -Wextra -g -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/openssl"
+	LIBS = -L"C:/msys64/mingw64/lib" -lssl -lcrypto
+	DEL = cmd /C del /F /Q
+	SEP = \\
+else
+	# Linux/macOS settings
+	CFLAGS = -Wall -Wextra -g
+	LIBS = -lssl -lcrypto
+	DEL = rm -f
+	SEP = /
+endif
 
-# OpenSSL linking
-LIBS = -L"C:/msys64/mingw64/lib" -lssl -lcrypto
+# Target executable
+TARGET = program
 
 # Source files
-SRCS = src/user/user.c src/user/userList.c src/auth/auth.c src/ui/ui.c src/board/board.c src/board/boardList.c src/post/post.c src/post/postList.c
+SRCS = \
+	src/user/user.c \
+	src/user/userList.c \
+	src/auth/auth.c \
+	src/ui/ui.c \
+	src/board/board.c \
+	src/board/boardList.c \
+	src/post/post.c \
+	src/post/postList.c \
+	src/vote/vote.c \
+	src/vote/voteList.c \
+	src/main.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
 
-# Output binary
-TARGET = app
-
 # Default target
 all: $(TARGET)
 
-# Link object files into executable
+# Linking
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $(TARGET) -mconsole $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
 
-# Compile .c to .o
+# Compilation
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean compiled files
+# Clean
 clean:
-ifeq ($(OS), Windows_NT)
-	@if exist src\user\user.o cmd /C del /F /Q src\user\user.o
-	@if exist src\user\userList.o cmd /C del /F /Q src\user\userList.o
-	@if exist src\auth\auth.o cmd /C del /F /Q src\auth\auth.o
-	@if exist src\ui\ui.o cmd /C del /F /Q src\ui\ui.o
-	@if exist src\board\board.o cmd /C del /F /Q src\board\board.o
-	@if exist src\board\boardList.o cmd /C del /F /Q src\board\boardList.o
-	@if exist src\post\post.o cmd /C del /F /Q src\post\post.o
-	@if exist src\post\postList.o cmd /C del /F /Q src\post\postList.o
-	@if exist $(TARGET) cmd /C del /F /Q $(TARGET)
+ifeq ($(OS),Windows_NT)
+	$(DEL) src\user\*.o
+	$(DEL) src\auth\*.o
+	$(DEL) src\ui\*.o
+	$(DEL) src\board\*.o
+	$(DEL) src\vote\*.o
+	$(DEL) src\post\*.o
+	$(DEL) src\main.o
+	$(DEL) $(TARGET).exe
 else
-	rm -f $(OBJS) $(TARGET)
+	$(DEL) $(OBJS) $(TARGET)
 endif

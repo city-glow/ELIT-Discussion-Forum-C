@@ -5,6 +5,8 @@
 #include "../../include/board/boardList.h"
 #include "../../include/post/post.h"
 #include "../../include/post/postList.h"
+#include "../../include/vote/vote.h"
+#include "../../include/vote/voteList.h"
 #include "../../include/ui/ui.h"
 #include <stdbool.h>
 #include <string.h>
@@ -149,6 +151,10 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
   } while (dashboard_choice != 0);
 }
 
+void ui_show_post() {
+
+};
+
 void ui_show_trending_posts() {
     ui_clear_screen();
     printf("\n========================================\n");
@@ -174,6 +180,36 @@ void ui_show_profile(User user) {
     printf("0. Kembali ke Menu Utama\n");
     printf("========================================\n");
     printf("Pilihan: ");
+}
+
+void get_vote_result(VoteList vote_list, int *vote_sum, Id current_user_id, Id target_id, VoteTargetType target_type, Id *my_vote_id, bool *has_voted) {
+    int upvotes = 0;
+    int downvotes = 0;
+    *my_vote_id = 0;
+    *has_voted = false;
+
+    VoteAddress current = vote_list.first;
+
+    while (current != NULL) {
+        if (current->info.target_id == target_id &&
+            current->info.target_type == target_type) {
+
+            if (current->info.is_upvote) {
+                upvotes++;
+            } else {
+                downvotes++;
+            }
+
+            if (current->info.user_id == current_user_id) {
+                *my_vote_id = current->info.id;
+                *has_voted = true;
+            }
+        }
+
+        current = current->next;
+    }
+
+    *vote_sum = upvotes - downvotes;
 }
 
 void ui_create_post() {
