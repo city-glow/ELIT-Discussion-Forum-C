@@ -46,8 +46,9 @@ int ui_show_main_menu() {
 int ui_show_dashboard(User user) {
 
   ui_clear_screen();
+  printf("\n========================================\n");
   printf("--- Selamat datang, %s!--\n", user.username);
-  printf("================================\n");
+  printf("========================================\n");
   printf("1. Add Post\n");
   printf("0. Logout\n");
   printf("Pilihan: ");
