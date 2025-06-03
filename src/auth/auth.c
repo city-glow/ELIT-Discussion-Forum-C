@@ -45,7 +45,15 @@ bool register_user(UserList *list, char *username, char *password) {
 
   // Hash the password
   unsigned char hash[SHA256_DIGEST_LENGTH];
+#ifdef _WIN32
+  SHA256_CTX ctx;
+  SHA256_Init(&ctx);
+  SHA256_Update(&ctx, password, strlen(password));
+  SHA256_Final(hash, &ctx);
+#else
   SHA256((unsigned char *)password, strlen(password), hash);
+#endif
+
 
   // Convert the binary hash to hex string
   char hashed_password[65]; // 64 chars + null terminator
@@ -67,7 +75,14 @@ bool register_user(UserList *list, char *username, char *password) {
 bool login(UserList list, char *username, char *password, User *logged_user) {
   // Hash the input password
   unsigned char hash[SHA256_DIGEST_LENGTH];
+#ifdef _WIN32
+  SHA256_CTX ctx;
+  SHA256_Init(&ctx);
+  SHA256_Update(&ctx, password, strlen1(password));
+  SHA256_Final(hash, &ctx);
+#else
   SHA256((unsigned char *)password, strlen(password), hash);
+#endif
 
   // Convert hash to hexadecimal string
   char hashed_input[65]; // 64 chars + null terminator
