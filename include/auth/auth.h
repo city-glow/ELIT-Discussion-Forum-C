@@ -5,5 +5,5 @@
 
 bool register_user(UserList *list, char *username, char *password);
 bool login(UserList list, char *username, char *password, User *logged_user);
-
+bool is_username_valid(char *username, UserList list);
 #endif

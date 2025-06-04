@@ -1,106 +1,123 @@
 #include "../../include/auth/auth.h"
-#include <openssl/sha.h>
+#include <argon2.h>  // Argon2 library
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-bool is_username_valid(char *username) {
-  if (username == NULL) {
-    return false;
-  }
-
-  for (int i = 0; username[i] != '\0'; i++) {
-    if (username[i] == ' ') {
-      return false;
+// Helper: Generate random salt (for demonstration)
+void generate_salt(char *salt, size_t length) {
+    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    srand((unsigned int)time(NULL));
+    for (size_t i = 0; i < length; ++i) {
+        salt[i] = charset[rand() % (sizeof(charset) - 1)];
     }
-  } 
-
-  return true;
 }
 
 // Fungsi untuk mengecek apakah username sudah dipakai
 bool is_username_taken(UserList list, char *username) {
-  UserAddress curr = list.first;
-  while (curr != NULL) {
-    if (strcmp(curr->info.username, username) == 0) {
-      return true;
+    UserAddress curr = list.first;
+    while (curr != NULL) {
+        if (strcmp(curr->info.username, username) == 0) {
+            return true;
+        }
+        curr = curr->next;
     }
-    curr = curr->next;
-  }
-  return false;
+    return false;
+}
+
+bool is_username_valid(char *username, UserList list) {
+    if (username == NULL) {
+        printf("Username tidak boleh kosong!!\n");
+        return false;
+    }
+
+    if (strcmp(username, "") == 0) {
+        printf("Username tidak boleh kosong!!\n");
+        return false;
+    }
+
+    for (int i = 0; username[i] != '\0'; i++) {
+        if (username[i] == ' ') {
+            printf("Username tidak boleh ada spasi!\n");
+            return false;
+        }
+    }
+
+    if (is_username_taken(list, username)) {
+        printf("Username tidak tersedia!! (sudah terpakai)\n");
+        return false;
+    }
+
+    return true;
 }
 
 bool register_user(UserList *list, char *username, char *password) {
+    if (!is_username_valid(username, *list)) {
+        printf("Username tidak boleh pakai spasi!.\n");
+        return false;
+    }
 
-  if (!is_username_valid(username)) {
-    printf("Username tidak boleh pakai spasi!.\n");
-    return false;
-  }
+    if (is_username_taken(*list, username)) {
+        printf("Username '%s' sudah digunakan.\n", username);
+        return false;
+    }
 
-  if (is_username_taken(*list, username)) {
-    printf("Username '%s' sudah digunakan.\n", username);
-    return false;
-  }
+    // Generate salt (optional, Argon2 handles it internally)
+    char salt[16]; // 16 bytes is standard for Argon2
+    generate_salt(salt, sizeof(salt));
 
-  // Hash the password
-  unsigned char hash[SHA256_DIGEST_LENGTH];
-#ifdef _WIN32
-  SHA256_CTX ctx;
-  SHA256_Init(&ctx);
-  SHA256_Update(&ctx, password, strlen(password));
-  SHA256_Final(hash, &ctx);
-#else
-  SHA256((unsigned char *)password, strlen(password), hash);
-#endif
+    // Hash the password using Argon2id
+    char hashed_password[128]; // Output buffer
+    uint32_t time_cost = 3;     // Iterations
+    uint32_t memory_cost = 65536; // 64 MB
+    uint32_t parallelism = 1;   // Threads
 
+    int result = argon2id_hash_encoded(
+        time_cost, memory_cost, parallelism,
+        password, strlen(password),
+        salt, sizeof(salt), 32,
+        hashed_password, sizeof(hashed_password)
+    );
 
-  // Convert the binary hash to hex string
-  char hashed_password[65]; // 64 chars + null terminator
-  for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
-    sprintf(&hashed_password[i * 2], "%02x", hash[i]);
+    if (result != ARGON2_OK) {
+        fprintf(stderr, "Argon2 hashing gagal: %s\n", argon2_error_message(result));
+        return false;
+    }
 
-  User new_user;
-  create_user(&new_user, username, hashed_password);
+    // Create and insert the new user
+    User new_user;
+    create_user(&new_user, username, hashed_password);
 
-  UserAddress new_node;
-  user_create_node(&new_node);
-  user_isi_node(&new_node, new_user);
-  user_insert(list, new_node);
+    UserAddress new_node;
+    user_create_node(&new_node);
+    user_isi_node(&new_node, new_user);
+    user_insert(list, new_node);
 
-  printf("Registrasi berhasil untuk '%s'.\n", username);
-  return true;
+    printf("Registrasi berhasil untuk '%s'.\n", username);
+    return true;
 }
 
 bool login(UserList list, char *username, char *password, User *logged_user) {
-  // Hash the input password
-  unsigned char hash[SHA256_DIGEST_LENGTH];
-#ifdef _WIN32
-  SHA256_CTX ctx;
-  SHA256_Init(&ctx);
-  SHA256_Update(&ctx, password, strlen1(password));
-  SHA256_Final(hash, &ctx);
-#else
-  SHA256((unsigned char *)password, strlen(password), hash);
-#endif
-
-  // Convert hash to hexadecimal string
-  char hashed_input[65]; // 64 chars + null terminator
-  for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
-    sprintf(&hashed_input[i * 2], "%02x", hash[i]);
-
-  // Search for user and compare hashed passwords
-  UserAddress curr = list.first;
-  while (curr != NULL) {
-    if (strcmp(curr->info.username, username) == 0 &&
-        strcmp(curr->info.hashed_password, hashed_input) == 0) {
-      *logged_user = curr->info;
-      printf("Login berhasil. Selamat datang, %s!\n", username);
-      return true;
+    // Search for user
+    UserAddress curr = list.first;
+    while (curr != NULL) {
+        if (strcmp(curr->info.username, username) == 0) {
+            // Verify password using Argon2
+            int result = argon2id_verify(curr->info.hashed_password, password, strlen(password));
+            if (result == ARGON2_OK) {
+                *logged_user = curr->info;
+                printf("Login berhasil. Selamat datang, %s!\n", username);
+                return true;
+            } else {
+                printf("Password salah.\n");
+                return false;
+            }
+        }
+        curr = curr->next;
     }
-    curr = curr->next;
-  }
 
-  printf("Login gagal. Username atau password salah.\n");
-  return false;
+    printf("Login gagal. Username tidak ditemukan.\n");
+    return false;
 }

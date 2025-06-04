@@ -5,13 +5,13 @@ CC = gcc
 ifeq ($(OS),Windows_NT)
 	# Windows settings
 	CFLAGS = -Wall -Wextra -g -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/openssl"
-	LIBS = -L"C:/msys64/mingw64/lib" -lssl -lcrypto
+	LIBS = -L"C:/msys64/mingw64/lib" -lssl -lcrypto -largon2
 	DEL = cmd /C del /F /Q
 	SEP = \\
 else
 	# Linux/macOS settings
 	CFLAGS = -Wall -Wextra -g
-	LIBS = -lssl -lcrypto
+	LIBS = -lssl -lcrypto -largon2
 	DEL = rm -f
 	SEP = /
 endif

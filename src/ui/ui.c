@@ -15,6 +15,7 @@
 #define ANSI_BLUE "\x1b[34m"
 #define ANSI_RESET "\x1b[0m"
 #define ANSI_BOLD "\x1b[1m"
+#define ANSI_ITALIC ""
 
 void ui_clear_screen() {
 #ifdef _WIN32
@@ -166,6 +167,7 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
 
 int ui_show_post(Id post_id, PostList *post_list, VoteList *vote_list,
                  User user, UserList *user_list, BoardList *board_list) {
+  ui_clear_screen();
   PostAddress this_post = post_search_by_id(post_list->first, post_id);
   UserAddress poster =
       user_search_by_id(user_list->first, this_post->info.user_id);
@@ -181,9 +183,9 @@ int ui_show_post(Id post_id, PostList *post_list, VoteList *vote_list,
   VoteAddress my_vote = vote_search_by_id(vote_list->first, my_vote_id);
 
   printf("\n========================================\n");
-  printf("                    POST                  \n");
-  printf("\n========================================\n");
-  printf("by %s\nin board [%s]\n", poster->info.username, board->info.title);
+  printf("                   POST                 \n");
+  printf("========================================\n");
+  printf("by %s in board [%s]\n", poster->info.username, board->info.title);
   printf("%sTitle:%s %s\n", ANSI_BOLD, ANSI_RESET, this_post->info.title);
   printf("%sContent:%s\n%s\n", ANSI_BOLD, ANSI_RESET, this_post->info.content);
   const char *arrow = vote_sum >= 0 ? "▲" : "▼";

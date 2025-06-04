@@ -30,9 +30,11 @@ int main() {
       switch (pilihan) {
       case 1: {
         char username[MAX_USERNAME + 1], password[100];
-        printf("Masukkan username: ");
-        fgets(username, sizeof(username), stdin);
-        username[strcspn(username, "\n")] = 0;
+        do {
+          printf("Masukkan username: ");
+          fgets(username, sizeof(username), stdin);
+          username[strcspn(username, "\n")] = 0;
+        } while (!is_username_valid(username, user_list));
 
         printf("Masukkan password: ");
         fgets(password, sizeof(password), stdin);
@@ -54,7 +56,8 @@ int main() {
 
         if (login(user_list, username, password, &logged_user)) {
           is_logged_in = true;
-          handle_dashboard(&board_list, &post_list, &user_list, &vote_list, &logged_user);
+          handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
+                           &logged_user);
         } else {
           ui_pause();
         }
