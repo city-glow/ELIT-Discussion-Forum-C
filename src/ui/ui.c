@@ -15,7 +15,7 @@
 #define ANSI_BLUE "\x1b[34m"
 #define ANSI_RESET "\x1b[0m"
 #define ANSI_BOLD "\x1b[1m"
-#define ANSI_ITALIC ""
+#define ANSI_ITALIC "\x1b[3m"
 
 void ui_clear_screen() {
 #ifdef _WIN32
@@ -35,7 +35,7 @@ void ui_pause() {
 
 int ui_show_main_menu() {
   ui_clear_screen();
-  printf("\n========================================\n");
+  printf("========================================\n");
   printf("              MENU UTAMA                \n");
   printf("========================================\n");
   printf("1. Register\n");
@@ -53,7 +53,7 @@ int ui_show_main_menu() {
 int ui_show_dashboard(User user) {
 
   ui_clear_screen();
-  printf("\n========================================\n");
+  printf("========================================\n");
   printf("--- Selamat datang, %s!--\n", user.username);
   printf("========================================\n");
   printf("1. Add Post\n");
@@ -104,7 +104,7 @@ Post *create_post_input(int board_id, int author_id) {
   char title[MAX_TITLE + 1];
   char content[1024];
 
-  printf("Masukkan judul post: ");
+  printf("Masukkan judul post (maksimal 100 karakter): ");
   fgets(title, sizeof(title), stdin);
   title[strcspn(title, "\n")] = 0;
 
@@ -137,7 +137,7 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
     if (dashboard_choice == 1) { // Create new post
       char board_title[MAX_TITLE + 1];
 
-      printf("Masukkan nama board: ");
+      printf("Masukkan nama board tempat anda ingin post (maksimal 100): ");
       fgets(board_title, sizeof(board_title), stdin);
       board_title[strcspn(board_title, "\n")] = 0;
 
@@ -159,42 +159,43 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
       post_tampil_list(post_list->first);
       ui_pause();
     } else if (dashboard_choice == 98) {
-      ui_show_post(1, post_list, vote_list, *user, user_list, board_list);
+      handle_post_page(1, post_list, vote_list, *user, user_list, board_list);
+      // ui_show_post(1, post_list, vote_list, *user, user_list, board_list);
     }
 
   } while (dashboard_choice != 0);
 }
 
-int ui_show_post(Id post_id, PostList *post_list, VoteList *vote_list,
-                 User user, UserList *user_list, BoardList *board_list) {
+int ui_show_post(Post post, User poster, Board board, int vote_sum,
+                 bool has_voted, Vote my_vote, User logged_user) {
   ui_clear_screen();
-  PostAddress this_post = post_search_by_id(post_list->first, post_id);
-  UserAddress poster =
-      user_search_by_id(user_list->first, this_post->info.user_id);
-  BoardAddress board =
-      board_search_by_id(board_list->first, this_post->info.board_id);
-  int vote_sum;
-  Id my_vote_id;
-  bool has_voted;
-
-  get_vote_result(*vote_list, &vote_sum, user.id, post_id, VOTE_TARGET_POST,
-                  &my_vote_id, &has_voted);
-
-  VoteAddress my_vote = vote_search_by_id(vote_list->first, my_vote_id);
-
-  printf("\n========================================\n");
-  printf("                   POST                 \n");
   printf("========================================\n");
-  printf("by %s in board [%s]\n", poster->info.username, board->info.title);
-  printf("%sTitle:%s %s\n", ANSI_BOLD, ANSI_RESET, this_post->info.title);
-  printf("%sContent:%s\n%s\n", ANSI_BOLD, ANSI_RESET, this_post->info.content);
-  const char *arrow = vote_sum >= 0 ? "▲" : "▼";
+  printf("-- POST %sby user [%s] in board [%s]%s\n", ANSI_ITALIC,
+         poster.username, board.title, ANSI_RESET);
+  printf("========================================\n");
+  // printf("%sby user [%s] in board [%s]%s\n", ANSI_ITALIC,
+  // poster->info.username, board->info.title, ANSI_RESET);
+  printf("%s{ %s }%s\n", ANSI_BOLD, post.title, ANSI_RESET);
+  printf("%s\n", post.content);
+  const char *arrow_up = "▲";
+  const char *arrow_down = "▼";
+  // const char *arrow = vote_sum >= 0 ? "▲" : "▼";
   const char *color = vote_sum >= 0 ? ANSI_RED : ANSI_BLUE;
-  const char *my_vote_info =
-      has_voted ? my_vote->info.is_upvote ? "▲" : "▼" : "None";
-  printf("%s%s %d%s\n", color, arrow, vote_sum, ANSI_RESET);
-  printf("\nYour vote: %s\n", my_vote_info);
+  if (has_voted) {
+    if (my_vote.is_upvote) {
+      printf("%s%s%s%s %s%d%s\n", ANSI_RED, arrow_up, ANSI_RESET, arrow_down, color, vote_sum,
+             ANSI_RESET);
+    } else {
+      printf("%s%s%s%s %s%d%s\n", arrow_up, ANSI_BLUE, arrow_down, ANSI_RESET, color,
+             vote_sum, ANSI_RESET);
+    }
+  } else {
+    printf("%s%s %s%d%s\n", arrow_up, arrow_down, color, vote_sum, ANSI_RESET);
+  }
+
   printf("\n");
+  printf("1. Toggle Upvote/Downvote/No_vote\n");
+  printf("2. Comment as user [%s]\n", logged_user.username);
   printf("0. Kembali\n");
 
   printf("========================================\n");
@@ -205,6 +206,49 @@ int ui_show_post(Id post_id, PostList *post_list, VoteList *vote_list,
   getchar();
   return choice;
 };
+
+void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
+                      User logged_user, UserList *user_list,
+                      BoardList *board_list) {
+  int menu_choice;
+  do {
+    PostAddress this_post = post_search_by_id(post_list->first, post_id);
+    UserAddress poster =
+        user_search_by_id(user_list->first, this_post->info.user_id);
+    BoardAddress board =
+        board_search_by_id(board_list->first, this_post->info.board_id);
+    int vote_sum;
+    Id my_vote_id;
+    bool has_voted;
+    get_vote_result(*vote_list, &vote_sum, logged_user.id, post_id,
+                    VOTE_TARGET_POST, &my_vote_id, &has_voted);
+
+    VoteAddress my_vote = vote_search_by_id(vote_list->first, my_vote_id);
+    menu_choice = ui_show_post(
+        this_post->info, poster->info, board->info, vote_sum, has_voted,
+        my_vote ? my_vote->info : (Vote){0}, logged_user);
+
+    if (menu_choice == 1) {
+      if (has_voted) {
+          if (my_vote->info.is_upvote) {
+
+        my_vote->info.is_upvote = false;
+          } else {
+              Vote X;
+              vote_delete_by_id(&(vote_list->first), my_vote_id, &X);
+          }
+
+      } else {
+        Vote new_vote;
+        VoteAddress new_vote_node;
+        vote_create_node(&new_vote_node);
+        create_vote(&new_vote, logged_user.id, post_id, VOTE_TARGET_POST, true);
+        vote_isi_node(&new_vote_node, new_vote);
+        vote_insert(vote_list, new_vote_node);
+      }
+    }
+  } while (menu_choice != 0);
+}
 
 void ui_show_trending_posts() {
   ui_clear_screen();
