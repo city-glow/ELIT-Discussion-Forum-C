@@ -17,7 +17,7 @@ else
 endif
 
 # Target executable
-TARGET = program
+TARGET = app
 
 # Source files
 SRCS = \

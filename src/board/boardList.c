@@ -63,7 +63,7 @@ BoardAddress board_search_by_id(BoardAddress p, Id nilai) {
 
 BoardAddress board_search_by_title(BoardAddress p, char* title) {
   while (!board_is_empty(p)) {
-    if (strcmp(p->info.title, title)) {
+    if (strcmp(p->info.title, title) == 0) {
       return p;
     }
     p = (*p).next;

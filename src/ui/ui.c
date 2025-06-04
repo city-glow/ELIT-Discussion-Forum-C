@@ -5,11 +5,16 @@
 #include "../../include/board/boardList.h"
 #include "../../include/post/post.h"
 #include "../../include/post/postList.h"
+#include "../../include/ui/ui.h"
 #include "../../include/vote/vote.h"
 #include "../../include/vote/voteList.h"
-#include "../../include/ui/ui.h"
 #include <stdbool.h>
 #include <string.h>
+
+#define ANSI_RED "\x1b[31m"
+#define ANSI_BLUE "\x1b[34m"
+#define ANSI_RESET "\x1b[0m"
+#define ANSI_BOLD "\x1b[1m"
 
 void ui_clear_screen() {
 #ifdef _WIN32
@@ -28,22 +33,21 @@ void ui_pause() {
 }
 
 int ui_show_main_menu() {
-    ui_clear_screen();
-    printf("\n========================================\n");
-    printf("              MENU UTAMA                \n");
-    printf("========================================\n");
-    printf("1. Register\n");
-    printf("2. Login\n");
-    printf("0. Keluar\n");
-    printf("========================================\n");
-    printf("Pilihan: ");
+  ui_clear_screen();
+  printf("\n========================================\n");
+  printf("              MENU UTAMA                \n");
+  printf("========================================\n");
+  printf("1. Register\n");
+  printf("2. Login\n");
+  printf("0. Keluar\n");
+  printf("========================================\n");
+  printf("Pilihan: ");
 
-    int choice;
-    scanf("%d", &choice);
-    getchar();
-    return choice;
+  int choice;
+  scanf("%d", &choice);
+  getchar();
+  return choice;
 }
-
 
 int ui_show_dashboard(User user) {
 
@@ -53,6 +57,8 @@ int ui_show_dashboard(User user) {
   printf("========================================\n");
   printf("1. Add Post\n");
   printf("0. Logout\n");
+
+  printf("========================================\n");
   printf("Pilihan: ");
 
   int choice;
@@ -64,14 +70,19 @@ int ui_show_dashboard(User user) {
 int get_or_create_board(BoardList *board_list, char *board_title, int user_id) {
   BoardAddress found = board_search_by_title(board_list->first, board_title);
   if (!board_is_empty(found)) {
+    printf("Board \"%s\" ditemukan. Menggunakan board yang sudah ada.\n",
+           board_title);
     return found->info.id;
   }
 
   printf("Board tidak ditemukan. Buat board baru? (y/n): ");
-  char choice;
-  scanf(" %c", &choice);
-  if (choice != 'y' && choice != 'Y') {
-    return -1; // User canceled
+  char choice_line[8]; // small buffer
+  fgets(choice_line, sizeof(choice_line), stdin);
+
+  // No need to clean buffer again; fgets consumes the newline
+  if (choice_line[0] != 'y' && choice_line[0] != 'Y') {
+    printf("Pembuatan board dibatalkan.\n");
+    return -1;
   }
 
   Board new_board;
@@ -91,7 +102,6 @@ Post *create_post_input(int board_id, int author_id) {
 
   char title[MAX_TITLE + 1];
   char content[1024];
-  getchar();
 
   printf("Masukkan judul post: ");
   fgets(title, sizeof(title), stdin);
@@ -117,6 +127,7 @@ Post *create_post_input(int board_id, int author_id) {
 }
 
 void handle_dashboard(BoardList *board_list, PostList *post_list,
+                      UserList *user_list, VoteList *vote_list,
                       const User *user) {
   int dashboard_choice;
   do {
@@ -146,98 +157,138 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
     } else if (dashboard_choice == 99) {
       post_tampil_list(post_list->first);
       ui_pause();
+    } else if (dashboard_choice == 98) {
+      ui_show_post(1, post_list, vote_list, *user, user_list, board_list);
     }
 
   } while (dashboard_choice != 0);
 }
 
-void ui_show_post() {
+int ui_show_post(Id post_id, PostList *post_list, VoteList *vote_list,
+                 User user, UserList *user_list, BoardList *board_list) {
+  PostAddress this_post = post_search_by_id(post_list->first, post_id);
+  UserAddress poster =
+      user_search_by_id(user_list->first, this_post->info.user_id);
+  BoardAddress board =
+      board_search_by_id(board_list->first, this_post->info.board_id);
+  int vote_sum;
+  Id my_vote_id;
+  bool has_voted;
 
+  get_vote_result(*vote_list, &vote_sum, user.id, post_id, VOTE_TARGET_POST,
+                  &my_vote_id, &has_voted);
+
+  VoteAddress my_vote = vote_search_by_id(vote_list->first, my_vote_id);
+
+  printf("\n========================================\n");
+  printf("                    POST                  \n");
+  printf("\n========================================\n");
+  printf("by %s\nin board [%s]\n", poster->info.username, board->info.title);
+  printf("%sTitle:%s %s\n", ANSI_BOLD, ANSI_RESET, this_post->info.title);
+  printf("%sContent:%s\n%s\n", ANSI_BOLD, ANSI_RESET, this_post->info.content);
+  const char *arrow = vote_sum >= 0 ? "▲" : "▼";
+  const char *color = vote_sum >= 0 ? ANSI_RED : ANSI_BLUE;
+  const char *my_vote_info =
+      has_voted ? my_vote->info.is_upvote ? "▲" : "▼" : "None";
+  printf("%s%s %d%s\n", color, arrow, vote_sum, ANSI_RESET);
+  printf("\nYour vote: %s\n", my_vote_info);
+  printf("\n");
+  printf("0. Kembali\n");
+
+  printf("========================================\n");
+  printf("Pilihan: ");
+
+  int choice;
+  scanf("%d", &choice);
+  getchar();
+  return choice;
 };
 
 void ui_show_trending_posts() {
-    ui_clear_screen();
-    printf("\n========================================\n");
-    printf("             TRENDING POSTS           \n");
-    printf("========================================\n");
-    printf("1. Pilih Post\n");
-    printf("2. Lihat Komentar\n");
-    printf("3. Vote Up/Down\n");
-    printf("4. Balas Komentar\n");
-    printf("0. Kembali ke Menu Utama\n");
-    printf("========================================\n");
-    printf("Pilihan: ");
+  ui_clear_screen();
+  printf("\n========================================\n");
+  printf("             TRENDING POSTS           \n");
+  printf("========================================\n");
+  printf("1. Pilih Post\n");
+  printf("2. Lihat Komentar\n");
+  printf("3. Vote Up/Down\n");
+  printf("4. Balas Komentar\n");
+  printf("0. Kembali ke Menu Utama\n");
+  printf("========================================\n");
+  printf("Pilihan: ");
 }
 
 void ui_show_profile(User user) {
-    ui_clear_screen();
-    printf("\n========================================\n");
-    printf("                 PROFIL %s              \n", user.username);
-    printf("========================================\n");
-    printf("1. Lihat Postingan Saya\n");
-    printf("2. Lihat Notifikasi\n");
-    printf("3. Lihat Board yang Dibuat\n");
-    printf("0. Kembali ke Menu Utama\n");
-    printf("========================================\n");
-    printf("Pilihan: ");
+  ui_clear_screen();
+  printf("\n========================================\n");
+  printf("                 PROFIL %s              \n", user.username);
+  printf("========================================\n");
+  printf("1. Lihat Postingan Saya\n");
+  printf("2. Lihat Notifikasi\n");
+  printf("3. Lihat Board yang Dibuat\n");
+  printf("0. Kembali ke Menu Utama\n");
+  printf("========================================\n");
+  printf("Pilihan: ");
 }
 
-void get_vote_result(VoteList vote_list, int *vote_sum, Id current_user_id, Id target_id, VoteTargetType target_type, Id *my_vote_id, bool *has_voted) {
-    int upvotes = 0;
-    int downvotes = 0;
-    *my_vote_id = 0;
-    *has_voted = false;
+void get_vote_result(VoteList vote_list, int *vote_sum, Id current_user_id,
+                     Id target_id, VoteTargetType target_type, Id *my_vote_id,
+                     bool *has_voted) {
+  int upvotes = 0;
+  int downvotes = 0;
+  *my_vote_id = 0;
+  *has_voted = false;
 
-    VoteAddress current = vote_list.first;
+  VoteAddress current = vote_list.first;
 
-    while (current != NULL) {
-        if (current->info.target_id == target_id &&
-            current->info.target_type == target_type) {
+  while (current != NULL) {
+    if (current->info.target_id == target_id &&
+        current->info.target_type == target_type) {
 
-            if (current->info.is_upvote) {
-                upvotes++;
-            } else {
-                downvotes++;
-            }
+      if (current->info.is_upvote) {
+        upvotes++;
+      } else {
+        downvotes++;
+      }
 
-            if (current->info.user_id == current_user_id) {
-                *my_vote_id = current->info.id;
-                *has_voted = true;
-            }
-        }
-
-        current = current->next;
+      if (current->info.user_id == current_user_id) {
+        *my_vote_id = current->info.id;
+        *has_voted = true;
+      }
     }
 
-    *vote_sum = upvotes - downvotes;
+    current = current->next;
+  }
+
+  *vote_sum = upvotes - downvotes;
 }
 
 void ui_create_post() {
-    ui_clear_screen();
-    printf("\n========================================\n");
-    printf("               BUAT POST             \n");
-    printf("========================================\n");
-    printf("Masukkan Judul: ");
-    // Input judul
-    printf("Masukkan Isi: ");
-    // Input isi
-    printf("Post Berhasil Dibuat!\n");
-    ui_pause();
+  ui_clear_screen();
+  printf("\n========================================\n");
+  printf("               BUAT POST             \n");
+  printf("========================================\n");
+  printf("Masukkan Judul: ");
+  // Input judul
+  printf("Masukkan Isi: ");
+  // Input isi
+  printf("Post Berhasil Dibuat!\n");
+  ui_pause();
 }
 
 void ui_search_post() {
-    ui_clear_screen();
-    printf("\n========================================\n");
-    printf("               CARI POST              \n");
-    printf("========================================\n");
-    printf("Masukkan Judul Post: ");
-    // Input pencarian
-    printf(" Menampilkan Hasil Pencarian...\n");
-    ui_pause();
+  ui_clear_screen();
+  printf("\n========================================\n");
+  printf("               CARI POST              \n");
+  printf("========================================\n");
+  printf("Masukkan Judul Post: ");
+  // Input pencarian
+  printf(" Menampilkan Hasil Pencarian...\n");
+  ui_pause();
 }
 
 void ui_logout() {
-    ui_clear_screen();
-    printf("\n Anda telah keluar dari sistem.\n");
-    ui_pause();
+  ui_clear_screen();
+  printf("\n Anda telah keluar dari sistem.\n");
+  ui_pause();
 }

@@ -4,6 +4,7 @@
 #include <stddef.h> // For NULL
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 bool post_is_empty(PostAddress p) { return (p == NULL); }
 
@@ -19,6 +20,7 @@ void post_create_node(PostAddress *p) {
 void post_isi_node(PostAddress *p, Post nilai) {
   if (*p != NULL) {
     (**p).info = nilai;
+    (*p)->info.content = strdup(nilai.content);
     (**p).next = NULL;
   }
 }

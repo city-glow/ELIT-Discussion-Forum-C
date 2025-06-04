@@ -13,10 +13,12 @@ int main() {
   UserList user_list;
   BoardList board_list;
   PostList post_list;
+  VoteList vote_list;
 
   user_create_list(&user_list);
   board_create_list(&board_list);
   post_create_list(&post_list);
+  vote_create_list(&vote_list);
 
   int pilihan;
   User logged_user;
@@ -52,7 +54,7 @@ int main() {
 
         if (login(user_list, username, password, &logged_user)) {
           is_logged_in = true;
-          handle_dashboard(&board_list, &post_list, &logged_user);
+          handle_dashboard(&board_list, &post_list, &user_list, &vote_list, &logged_user);
         } else {
           ui_pause();
         }
