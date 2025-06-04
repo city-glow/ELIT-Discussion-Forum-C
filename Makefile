@@ -50,14 +50,14 @@ $(TARGET): $(OBJS)
 # Clean
 clean:
 ifeq ($(OS),Windows_NT)
-	$(DEL) src\user\*.o
-	$(DEL) src\auth\*.o
-	$(DEL) src\ui\*.o
-	$(DEL) src\board\*.o
-	$(DEL) src\vote\*.o
-	$(DEL) src\post\*.o
-	$(DEL) src\main.o
-	$(DEL) $(TARGET).exe
+	@cmd /C del /F /Q src\user\*.o 2> nul
+	@cmd /C del /F /Q src\auth\*.o 2> nul
+	@cmd /C del /F /Q src\ui\*.o 2> nul
+	@cmd /C del /F /Q src\board\*.o 2> nul
+	@cmd /C del /F /Q src\vote\*.o 2> nul
+	@cmd /C del /F /Q src\post\*.o 2> nul
+	@cmd /C del /F /Q src\main.o 2> nul
+	@cmd /C del /F /Q $(TARGET).exe 2> nul
 else
 	$(DEL) $(OBJS) $(TARGET)
 endif
