@@ -1,5 +1,5 @@
 #include "../../include/auth/auth.h"
-#include <argon2.h>  // Argon2 library
+#include "../../include/phc-winner-argon2/include/argon2.h"  // Argon2 library
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>

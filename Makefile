@@ -4,8 +4,8 @@ CC = gcc
 # Detect OS
 ifeq ($(OS),Windows_NT)
 	# Windows settings
-	CFLAGS = -Wall -Wextra -g -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/openssl"
-	LIBS = -L"C:/msys64/mingw64/lib" -lssl -lcrypto -largon2
+	CFLAGS = -Wall -Wextra -g -Iinclude/phc-winner-argon2/include
+	LIBS = 
 	DEL = cmd /C del /F /Q
 	SEP = \\
 else
@@ -31,6 +31,12 @@ SRCS = \
 	src/post/postList.c \
 	src/vote/vote.c \
 	src/vote/voteList.c \
+	include/phc-winner-argon2/src/argon2.c \
+	include/phc-winner-argon2/src/core.c \
+	include/phc-winner-argon2/src/encoding.c \
+	include/phc-winner-argon2/src/blake2/blake2b.c \
+	include/phc-winner-argon2/src/thread.c \
+include/phc-winner-argon2/src/ref.c \
 	src/main.c
 
 # Object files
