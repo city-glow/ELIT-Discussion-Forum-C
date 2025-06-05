@@ -8,6 +8,7 @@ void create_post(Post *post, Id user_id, Id board_id, char* title, char *content
     post->content = strdup(content);
     post->user_id = user_id;
     post->board_id = board_id;
+    post->edited = false;
 }
 
 #endif

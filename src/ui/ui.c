@@ -180,14 +180,14 @@ int ui_show_post(Post post, User poster, Board board, int vote_sum,
   const char *arrow_up = "▲";
   const char *arrow_down = "▼";
   // const char *arrow = vote_sum >= 0 ? "▲" : "▼";
-  const char *color = vote_sum >= 0 ? ANSI_RED : ANSI_BLUE;
+  const char *color = vote_sum >= 0 ? vote_sum > 0 ? ANSI_RED : "" : ANSI_BLUE;
   if (has_voted) {
     if (my_vote.is_upvote) {
-      printf("%s%s%s%s %s%d%s\n", ANSI_RED, arrow_up, ANSI_RESET, arrow_down, color, vote_sum,
-             ANSI_RESET);
+      printf("%s%s%s%s %s%d%s\n", ANSI_RED, arrow_up, ANSI_RESET, arrow_down,
+             color, vote_sum, ANSI_RESET);
     } else {
-      printf("%s%s%s%s %s%d%s\n", arrow_up, ANSI_BLUE, arrow_down, ANSI_RESET, color,
-             vote_sum, ANSI_RESET);
+      printf("%s%s%s%s %s%d%s\n", arrow_up, ANSI_BLUE, arrow_down, ANSI_RESET,
+             color, vote_sum, ANSI_RESET);
     }
   } else {
     printf("%s%s %s%d%s\n", arrow_up, arrow_down, color, vote_sum, ANSI_RESET);
@@ -230,13 +230,13 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
 
     if (menu_choice == 1) {
       if (has_voted) {
-          if (my_vote->info.is_upvote) {
+        if (my_vote->info.is_upvote) {
 
-        my_vote->info.is_upvote = false;
-          } else {
-              Vote X;
-              vote_delete_by_id(&(vote_list->first), my_vote_id, &X);
-          }
+          my_vote->info.is_upvote = false;
+        } else {
+          Vote X;
+          vote_delete_by_id(&(vote_list->first), my_vote_id, &X);
+        }
 
       } else {
         Vote new_vote;

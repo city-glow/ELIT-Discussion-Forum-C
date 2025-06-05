@@ -81,6 +81,7 @@ int main() {
   user_deallocation(&user_list.first);
   board_deallocation(&board_list.first);
   post_deallocation(&post_list.first);
+  vote_deallocation(&vote_list.first);
 
   return 0;
 }
