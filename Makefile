@@ -5,7 +5,7 @@ CC = gcc
 ifeq ($(OS),Windows_NT)
 	# Windows settings
 	CFLAGS = -Wall -Wextra -g -Iinclude/phc-winner-argon2/include
-	LIBS = 
+	LIBS =
 	DEL = cmd /C del /F /Q
 	SEP = \\
 else
@@ -20,28 +20,45 @@ endif
 TARGET = app
 
 # Source files
-SRCS = \
-	src/user/user.c \
-	src/user/userList.c \
-	src/auth/auth.c \
-	src/ui/ui.c \
-	src/board/board.c \
-	src/board/boardList.c \
-	src/post/post.c \
-	src/post/postList.c \
-	src/comment/comment.c \
-	src/comment/commentTree.c \
-	src/comment/commentTreeList.c \
-	src/vote/vote.c \
-	src/vote/voteList.c \
-	include/phc-winner-argon2/src/argon2.c \
-	include/phc-winner-argon2/src/core.c \
-	include/phc-winner-argon2/src/encoding.c \
-	include/phc-winner-argon2/src/blake2/blake2b.c \
-	include/phc-winner-argon2/src/thread.c \
-include/phc-winner-argon2/src/ref.c \
-	src/main.c
-
+ifeq ($(OS),Windows_NT)
+	SRCS = \
+		src/user/user.c \
+		src/user/userList.c \
+		src/auth/auth.c \
+		src/ui/ui.c \
+		src/board/board.c \
+		src/board/boardList.c \
+		src/post/post.c \
+		src/post/postList.c \
+		src/comment/comment.c \
+		src/comment/commentTree.c \
+		src/comment/commentTreeList.c \
+		src/vote/vote.c \
+		src/vote/voteList.c \
+		include/phc-winner-argon2/src/argon2.c \
+		include/phc-winner-argon2/src/core.c \
+		include/phc-winner-argon2/src/encoding.c \
+		include/phc-winner-argon2/src/blake2/blake2b.c \
+		include/phc-winner-argon2/src/thread.c \
+		include/phc-winner-argon2/src/ref.c \
+		src/main.c
+else
+	SRCS = \
+		src/user/user.c \
+		src/user/userList.c \
+		src/auth/auth.c \
+		src/ui/ui.c \
+		src/board/board.c \
+		src/board/boardList.c \
+		src/post/post.c \
+		src/post/postList.c \
+		src/comment/comment.c \
+		src/comment/commentTree.c \
+		src/comment/commentTreeList.c \
+		src/vote/vote.c \
+		src/vote/voteList.c \
+		src/main.c
+endif
 # Object files
 OBJS = $(SRCS:.c=.o)
 
