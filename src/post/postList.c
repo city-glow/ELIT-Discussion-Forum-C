@@ -76,9 +76,12 @@ void post_insert_after(PostAddress *pBef, PostAddress PNew) {
 void post_del_awal(PostAddress *p, Post *X) {
   if (!post_is_empty(*p)) {
     *X = (**p).info;
+    X->content = strdup((*p)->info.content);
     PostAddress temp = *p;
+
     *p = (**p).next;
     (*temp).next = NULL;
+    free(temp->info.content);
     free(temp);
   }
 }
@@ -88,6 +91,9 @@ void post_del_akhir(PostAddress *p, Post *X) {
     if (post_is_empty((**p).next)) {
       printf("yellow!");
       *X = (**p).info;
+
+      X->content = strdup((*p)->info.content);
+      free((*p)->info.content);
       free(*p);
       *p = NULL;
     } else {
@@ -98,6 +104,8 @@ void post_del_akhir(PostAddress *p, Post *X) {
         last = (*last).next;
       }
       *X = (*last).info;
+      X->content = strdup((*p)->info.content);
+      free(last->info.content);
       free(last);
       (*prev).next = NULL;
     }
@@ -109,6 +117,7 @@ void post_del_after(PostAddress *pBef, Post *X) {
   (**pBef).next = (*temp).next;
   *X = (*temp).info;
   (*temp).next = NULL;
+free(temp->info.content);
   free(temp);
 }
 
