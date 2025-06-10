@@ -8,17 +8,20 @@
 #include "../include/post/postList.h"
 #include "../include/ui/ui.h"
 #include "../include/user/userList.h"
+#include "../include/comment/commentTreeList.h"
 
 int main() {
   UserList user_list;
   BoardList board_list;
   PostList post_list;
   VoteList vote_list;
+  CommentTreeList comment_tree_list;
 
   user_create_list(&user_list);
   board_create_list(&board_list);
   post_create_list(&post_list);
   vote_create_list(&vote_list);
+  comment_tree_list_create_list(&comment_tree_list);
 
   int pilihan;
   User logged_user;
@@ -57,7 +60,7 @@ int main() {
         if (login(user_list, username, password, &logged_user)) {
           is_logged_in = true;
           handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
-                           &logged_user);
+                           &comment_tree_list, &logged_user);
         } else {
           ui_pause();
         }
@@ -82,6 +85,7 @@ int main() {
   board_deallocation(&board_list.first);
   post_deallocation(&post_list.first);
   vote_deallocation(&vote_list.first);
+  comment_tree_list_deallocation(&comment_tree_list.first);
 
   return 0;
 }

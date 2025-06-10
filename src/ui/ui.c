@@ -1,13 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 // #include <string.h>
+#include "../../include/array/item.h"
 #include "../../include/board/board.h"
 #include "../../include/board/boardList.h"
+#include "../../include/comment/comment.h"
+#include "../../include/comment/commentTree.h"
+#include "../../include/comment/commentTreeList.h"
 #include "../../include/post/post.h"
 #include "../../include/post/postList.h"
 #include "../../include/ui/ui.h"
 #include "../../include/vote/vote.h"
 #include "../../include/vote/voteList.h"
+// #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -102,13 +107,13 @@ Post *create_post_input(int board_id, int author_id) {
   }
 
   char title[MAX_TITLE + 1];
-  char content[1024];
+  char content[1025];
 
   printf("Masukkan judul post (maksimal 100 karakter): ");
   fgets(title, sizeof(title), stdin);
   title[strcspn(title, "\n")] = 0;
 
-  printf("Masukkan konten post:\n");
+  printf("Masukkan konten post (maksimal 1024 karakter):\n");
   fgets(content, sizeof(content), stdin);
   content[strcspn(content, "\n")] = 0;
 
@@ -129,7 +134,7 @@ Post *create_post_input(int board_id, int author_id) {
 
 void handle_dashboard(BoardList *board_list, PostList *post_list,
                       UserList *user_list, VoteList *vote_list,
-                      const User *user) {
+                      CommentTreeList *comment_tree_list, const User *user) {
   int dashboard_choice;
   do {
     dashboard_choice = ui_show_dashboard(*user);
@@ -159,7 +164,8 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
       post_tampil_list(post_list->first);
       ui_pause();
     } else if (dashboard_choice == 98) {
-      handle_post_page(1, post_list, vote_list, *user, user_list, board_list);
+      handle_post_page(1, post_list, vote_list, *user, user_list, board_list,
+                       comment_tree_list);
       // ui_show_post(1, post_list, vote_list, *user, user_list, board_list);
     }
 
@@ -196,6 +202,7 @@ int ui_show_post(Post post, User poster, Board board, int vote_sum,
   printf("\n");
   printf("1. Toggle Upvote/Downvote/No_vote\n");
   printf("2. Comment as user [%s]\n", logged_user.username);
+  printf("3. View Top Comments\n");
   printf("0. Kembali\n");
 
   printf("========================================\n");
@@ -206,77 +213,6 @@ int ui_show_post(Post post, User poster, Board board, int vote_sum,
   getchar();
   return choice;
 };
-
-void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
-                      User logged_user, UserList *user_list,
-                      BoardList *board_list) {
-  int menu_choice;
-  do {
-    PostAddress this_post = post_search_by_id(post_list->first, post_id);
-    UserAddress poster =
-        user_search_by_id(user_list->first, this_post->info.user_id);
-    BoardAddress board =
-        board_search_by_id(board_list->first, this_post->info.board_id);
-    int vote_sum;
-    Id my_vote_id;
-    bool has_voted;
-    get_vote_result(*vote_list, &vote_sum, logged_user.id, post_id,
-                    VOTE_TARGET_POST, &my_vote_id, &has_voted);
-
-    VoteAddress my_vote = vote_search_by_id(vote_list->first, my_vote_id);
-    menu_choice = ui_show_post(
-        this_post->info, poster->info, board->info, vote_sum, has_voted,
-        my_vote ? my_vote->info : (Vote){0}, logged_user);
-
-    if (menu_choice == 1) {
-      if (has_voted) {
-        if (my_vote->info.is_upvote) {
-
-          my_vote->info.is_upvote = false;
-        } else {
-          Vote X;
-          vote_delete_by_id(&(vote_list->first), my_vote_id, &X);
-        }
-
-      } else {
-        Vote new_vote;
-        VoteAddress new_vote_node;
-        vote_create_node(&new_vote_node);
-        create_vote(&new_vote, logged_user.id, post_id, VOTE_TARGET_POST, true);
-        vote_isi_node(&new_vote_node, new_vote);
-        vote_insert(vote_list, new_vote_node);
-      }
-    }
-  } while (menu_choice != 0);
-}
-
-void ui_show_trending_posts() {
-  ui_clear_screen();
-  printf("\n========================================\n");
-  printf("             TRENDING POSTS           \n");
-  printf("========================================\n");
-  printf("1. Pilih Post\n");
-  printf("2. Lihat Komentar\n");
-  printf("3. Vote Up/Down\n");
-  printf("4. Balas Komentar\n");
-  printf("0. Kembali ke Menu Utama\n");
-  printf("========================================\n");
-  printf("Pilihan: ");
-}
-
-void ui_show_profile(User user) {
-  ui_clear_screen();
-  printf("\n========================================\n");
-  printf("                 PROFIL %s              \n", user.username);
-  printf("========================================\n");
-  printf("1. Lihat Postingan Saya\n");
-  printf("2. Lihat Notifikasi\n");
-  printf("3. Lihat Board yang Dibuat\n");
-  printf("0. Kembali ke Menu Utama\n");
-  printf("========================================\n");
-  printf("Pilihan: ");
-}
-
 void get_vote_result(VoteList vote_list, int *vote_sum, Id current_user_id,
                      Id target_id, VoteTargetType target_type, Id *my_vote_id,
                      bool *has_voted) {
@@ -320,6 +256,182 @@ void ui_create_post() {
   // Input isi
   printf("Post Berhasil Dibuat!\n");
   ui_pause();
+}
+
+int get_comment_vote_sum(VoteList vote_list, Id comment_id) {
+  int sum = 0;
+  VoteAddress current = vote_list.first;
+  while (current != NULL) {
+    if (current->info.target_id == comment_id &&
+        current->info.target_type == VOTE_TARGET_COMMENT) {
+      sum += current->info.is_upvote ? 1 : -1;
+    }
+    current = current->next;
+  }
+  return sum;
+}
+
+int compare_vote_sum(const void *a, const void *b) {
+  return ((Item *)b)->vote_sum - ((Item *)a)->vote_sum;
+}
+
+Item *generate_top_comments_array(CommentTreeList comment_list,
+                                  VoteList vote_list, int *count) {
+  int size = comment_tree_list_count(comment_list.first);
+  Item *items = (Item *)malloc(size * sizeof(Item));
+  *count = 0;
+  CommentTreeAddress current = comment_list.first;
+  while (current != NULL) {
+    if (current->info.root != NULL) {
+      items[*count].type = ITEM_TYPE_COMMENT;
+      items[*count].id = current->info.root->info.id;
+      items[*count].vote_sum =
+          get_comment_vote_sum(vote_list, items[*count].id);
+      (*count)++;
+    }
+    current = current->next;
+  }
+  qsort(items, *count, sizeof(Item), compare_vote_sum);
+  return items;
+}
+
+void display_top_comments(Item *items, int total_items, int offset) {
+  printf("Top Comments:\n");
+  for (int i = offset; i < offset + 10 && i < total_items; i++) {
+    printf("%d. Comment ID: %d | Votes: %d\n", i - offset + 1, items[i].id,
+           items[i].vote_sum);
+  }
+  printf("\nNavigation:\n");
+  if (offset > 0)
+    printf("P. Previous Page\n");
+  if (offset + 10 < total_items)
+    printf("N. Next Page\n");
+  printf("0. Back\n");
+  printf("Select comment number or navigate: ");
+}
+
+void handle_comment_selection(Item selected_item, CommentTreeList comment_list,
+                              VoteList *vote_list, User logged_user) {
+  CommentTreeAddress comment_tree =
+      comment_tree_list_search_by_root_id(comment_list.first, selected_item.id);
+  if (comment_tree != NULL) {
+    printf("Displaying comment tree for ID: %d\n", selected_item.id);
+    comment_tree_print_tree(comment_tree->info);
+    // Add interaction options (vote, reply, etc.)
+    // Implement based on user input handling
+  }
+}
+
+void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
+                      User logged_user, UserList *user_list,
+                      BoardList *board_list,
+                      CommentTreeList *comment_tree_list) {
+  int menu_choice;
+  do {
+    PostAddress this_post = post_search_by_id(post_list->first, post_id);
+    UserAddress poster =
+        user_search_by_id(user_list->first, this_post->info.user_id);
+    BoardAddress board =
+        board_search_by_id(board_list->first, this_post->info.board_id);
+    int vote_sum;
+    Id my_vote_id;
+    bool has_voted;
+    get_vote_result(*vote_list, &vote_sum, logged_user.id, post_id,
+                    VOTE_TARGET_POST, &my_vote_id, &has_voted);
+
+    VoteAddress my_vote = vote_search_by_id(vote_list->first, my_vote_id);
+    menu_choice = ui_show_post(
+        this_post->info, poster->info, board->info, vote_sum, has_voted,
+        my_vote ? my_vote->info : (Vote){0}, logged_user);
+
+    if (menu_choice == 1) {
+      if (has_voted) {
+        if (my_vote->info.is_upvote) {
+
+          my_vote->info.is_upvote = false;
+        } else {
+          Vote X;
+          vote_delete_by_id(&(vote_list->first), my_vote_id, &X);
+        }
+
+      } else {
+        Vote new_vote;
+        VoteAddress new_vote_node;
+        vote_create_node(&new_vote_node);
+        create_vote(&new_vote, logged_user.id, post_id, VOTE_TARGET_POST, true);
+        vote_isi_node(&new_vote_node, new_vote);
+        vote_insert(vote_list, new_vote_node);
+      }
+    } else if (menu_choice == 2) {
+      char content[1025];
+      printf("Masukkan konten komentar (maksimal 1024 karakter):\n");
+      fgets(content, sizeof(content), stdin);
+      content[strcspn(content, "\n")] = 0;
+
+      Comment wa;
+      create_comment(&wa, logged_user.id, this_post->info.id, -1, content);
+      CommentAddress new_comment_node;
+      new_comment_node = (CommentAddress)malloc(sizeof(CommentElmtList));
+      new_comment_node->info = wa;
+      new_comment_node->info.content = strdup(wa.content);
+
+      comment_tree_list_insert(comment_tree_list, new_comment_node);
+    }
+    if (menu_choice == 3) {
+      int total_items, offset = 0;
+      Item *top_comments = generate_top_comments_array(
+          *comment_tree_list, *vote_list, &total_items);
+      int exit_comments = 0;
+      while (!exit_comments) {
+        display_top_comments(top_comments, total_items, offset);
+        char choice[10];
+        scanf("%s", choice);
+        if (choice[0] == 'N' && offset + 10 < total_items) {
+          offset += 10;
+        } else if (choice[0] == 'P' && offset > 0) {
+          offset -= 10;
+        } else if (choice[0] == '0') {
+          exit_comments = 1;
+        } else {
+          int selected = atoi(choice);
+          if (selected > 0 && selected <= 10 &&
+              offset + selected <= total_items) {
+            handle_comment_selection(top_comments[offset + selected - 1],
+                                     *comment_tree_list, vote_list,
+                                     logged_user);
+          }
+        }
+      }
+      free(top_comments);
+    }
+  } while (menu_choice != 0);
+}
+
+void ui_show_trending_posts() {
+  ui_clear_screen();
+  printf("\n========================================\n");
+  printf("             TRENDING POSTS           \n");
+  printf("========================================\n");
+  printf("1. Pilih Post\n");
+  printf("2. Lihat Komentar\n");
+  printf("3. Vote Up/Down\n");
+  printf("4. Balas Komentar\n");
+  printf("0. Kembali ke Menu Utama\n");
+  printf("========================================\n");
+  printf("Pilihan: ");
+}
+
+void ui_show_profile(User user) {
+  ui_clear_screen();
+  printf("\n========================================\n");
+  printf("                 PROFIL %s              \n", user.username);
+  printf("========================================\n");
+  printf("1. Lihat Postingan Saya\n");
+  printf("2. Lihat Notifikasi\n");
+  printf("3. Lihat Board yang Dibuat\n");
+  printf("0. Kembali ke Menu Utama\n");
+  printf("========================================\n");
+  printf("Pilihan: ");
 }
 
 void ui_search_post() {

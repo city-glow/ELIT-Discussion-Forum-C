@@ -4,7 +4,7 @@ CC = gcc
 # Detect OS
 ifeq ($(OS),Windows_NT)
 	# Windows settings
-	CFLAGS = -Wall -Wextra -g -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/openssl"
+	CFLAGS = -Wall -Wextra -g
 	LIBS = -L"C:/msys64/mingw64/lib" -lssl -lcrypto -largon2
 	DEL = cmd /C del /F /Q
 	SEP = \\
@@ -29,6 +29,9 @@ SRCS = \
 	src/board/boardList.c \
 	src/post/post.c \
 	src/post/postList.c \
+	src/comment/comment.c \
+	src/comment/commentTree.c \
+	src/comment/commentTreeList.c \
 	src/vote/vote.c \
 	src/vote/voteList.c \
 	src/main.c

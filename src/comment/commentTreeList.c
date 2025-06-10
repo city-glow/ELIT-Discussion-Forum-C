@@ -1,0 +1,280 @@
+#ifndef COMMENTTREELIST_C
+#define COMMENTTREELIST_C
+#include "../../include/comment/commentTreeList.h"
+#include "../../include/comment/commentTree.h"
+#include <stddef.h> // For NULL
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+bool comment_tree_list_is_empty(CommentTreeAddress p) { return (p == NULL); }
+
+void comment_tree_list_create_list(CommentTreeList *p) {
+  p->first = NULL;
+  p->id_max = 0;
+}
+
+void comment_tree_list_create_node(CommentTreeAddress *p) {
+  *p = (CommentTreeAddress)malloc(sizeof(CommentTreeElmtList));
+}
+
+void comment_tree_list_isi_node(CommentTreeAddress *p, CommentTree nilai) {
+  if (*p != NULL) {
+    (**p).info = nilai;
+    (**p).next = NULL;
+  }
+}
+
+void comment_tree_list_tampil_list(CommentTreeAddress p) {
+  if (comment_tree_list_is_empty(p)) {
+    printf("NULL\n");
+  } else {
+    comment_tree_print_tree(p->info);
+    comment_tree_list_tampil_list((*p).next);
+  }
+}
+
+void comment_tree_list_insert_awal(CommentTreeAddress *p,
+                                   CommentTreeAddress PNew) {
+  (*PNew).next = *p;
+  *p = PNew;
+}
+
+void comment_tree_list_insert_akhir(CommentTreeAddress *p,
+                                    CommentTreeAddress PNew) {
+  if (comment_tree_list_is_empty(*p)) {
+    *p = PNew;
+  } else {
+    CommentTreeAddress temp = *p;
+    while (!comment_tree_list_is_empty((*temp).next)) {
+      temp = (*temp).next;
+    }
+    (*temp).next = PNew;
+  }
+}
+
+CommentTreeAddress comment_tree_list_search_by_post_id(CommentTreeAddress p,
+                                                       Id nilai) {
+  while (!comment_tree_list_is_empty(p)) {
+    if (p->info.post_id == nilai) {
+      return p;
+    }
+    p = (*p).next;
+  }
+  return NULL;
+}
+
+CommentTreeAddress comment_tree_list_search_by_root_id(CommentTreeAddress p,
+                                                       Id nilai) {
+  while (!comment_tree_list_is_empty(p)) {
+    if (p->info.root->info.id == nilai) {
+      return p;
+    }
+    p = (*p).next;
+  }
+  return NULL;
+}
+
+CommentAddress comment_tree_list_search_by_id(CommentTreeAddress p, Id nilai) {
+  while (!comment_tree_list_is_empty(p)) {
+    CommentAddress result = comment_tree_search_by_id(p->info, nilai);
+    if (result != NULL) {
+      return result; // Found the ID
+    }
+    p = p->next; // Move to next tree in the list
+  }
+  return NULL; // Not found
+}
+
+void comment_tree_list_insert(CommentTreeList *p, CommentAddress PNew) {
+  // Assign unique ID
+  p->id_max += 1;
+  PNew->info.id = p->id_max;
+
+  // Case 1: Top-level comment (no reply)
+  if (PNew->info.reply_to == -1) {
+    CommentTreeAddress np;
+    comment_tree_list_create_node(&np); // Allocate node for new tree
+    create_comment_tree(&np->info);     // Initialize the tree
+
+    // Insert the comment node into the new tree
+    if (!create_and_insert_comment_node(&np->info, PNew->info)) {
+      // Handle failure (e.g. memory allocation)
+      return;
+    }
+
+    // Insert new CommentTree node into the list
+    comment_tree_list_insert_akhir(&(p->first), np);
+  }
+  // Case 2: Reply to existing comment
+  else {
+    CommentTreeAddress curr = p->first;
+    bool inserted = false;
+
+    // Search through all trees for the parent comment
+    while (curr != NULL && !inserted) {
+      inserted = create_and_insert_comment_node(&curr->info, PNew->info);
+      curr = curr->next;
+    }
+
+    // Optional: Handle case when parent ID is not found in any tree
+    if (!inserted) {
+      // You could log a warning or handle the orphaned comment here
+    }
+  }
+}
+
+void comment_tree_list_insert_after(CommentTreeAddress *pBef,
+                                    CommentTreeAddress PNew) {
+  (*PNew).next = (**pBef).next;
+  (**pBef).next = PNew;
+}
+
+void comment_tree_list_del_awal(CommentTreeAddress *p, CommentTree *X) {
+  if (!comment_tree_list_is_empty(*p)) {
+    *X = (**p).info;
+    CommentTreeAddress temp = *p;
+    *p = (**p).next;
+    (*temp).next = NULL;
+    free(temp);
+  }
+}
+
+void comment_tree_list_del_akhir(CommentTreeAddress *p, CommentTree *X) {
+  if (!comment_tree_list_is_empty(*p)) {
+    if (comment_tree_list_is_empty((**p).next)) {
+      printf("yellow!");
+      *X = (**p).info;
+      free(*p);
+      *p = NULL;
+    } else {
+      CommentTreeAddress prev;
+      CommentTreeAddress last = *p;
+      while (!comment_tree_list_is_empty((*last).next)) {
+        prev = last;
+        last = (*last).next;
+      }
+      *X = (*last).info;
+      free(last);
+      (*prev).next = NULL;
+    }
+  }
+}
+
+void comment_tree_list_del_after(CommentTreeAddress *pBef, CommentTree *X) {
+  CommentTreeAddress temp = (**pBef).next;
+  (**pBef).next = (*temp).next;
+  *X = (*temp).info;
+  (*temp).next = NULL;
+  free(temp);
+}
+
+void comment_tree_list_delete_by_address(CommentTreeAddress *p,
+                                         CommentTreeAddress pDel,
+                                         CommentTree *X) {
+  if (comment_tree_list_is_empty(*p) || comment_tree_list_is_empty(pDel))
+    return;
+
+  if (*p == pDel) {
+    comment_tree_list_del_awal(p, X);
+  } else {
+    CommentTreeAddress temp = *p;
+    while (temp->next != NULL && temp->next != pDel) {
+      temp = temp->next;
+    }
+
+    if (temp->next == pDel) {
+      comment_tree_list_del_after(&temp, X);
+    }
+  }
+}
+
+void comment_tree_list_delete_by_post_id(CommentTreeAddress *p, Id nilai,
+                                         CommentTree *X) {
+  CommentTreeAddress target = comment_tree_list_search_by_post_id(*p, nilai);
+  comment_tree_list_delete_by_address(p, target, X);
+}
+
+void comment_delete_all_post_id(CommentTreeAddress *p, Id nilai,
+                                CommentTree *X) {
+  CommentTreeAddress target = comment_tree_list_search_by_post_id(*p, nilai);
+  while (target != NULL) {
+    comment_tree_list_delete_by_address(p, target, X);
+    target = comment_tree_list_search_by_post_id(*p, nilai);
+  }
+}
+
+
+
+void comment_tree_list_delete_comment_by_id(CommentTreeList *p, Id nilai, Comment *X) {
+  if (p == NULL || p->first == NULL)
+    return;
+
+  CommentTreeAddress tree = p->first;
+  while (tree != NULL) {
+    CommentAddress root = tree->info.root;
+
+    // Special case: the root of this tree is the node to delete
+    if (root != NULL && root->info.id == nilai) {
+      if (X != NULL) {
+        *X = root->info;
+      }
+
+      delete_comment_by_id_rec(root, nilai, false);
+      tree->info.root = NULL; // Delete root only, not the whole list
+      return;
+    }
+
+    // Search and delete within the tree
+    if (delete_comment_by_id_rec(tree->info.root, nilai, true)) {
+      return; // Found and deleted
+    }
+
+    tree = tree->next;
+  }
+}
+
+
+
+void comment_tree_list_deallocation(CommentTreeAddress *p) {
+  while (!comment_tree_list_is_empty(*p)) {
+    CommentTree i;
+    comment_tree_list_del_awal(p, &i);
+  }
+}
+
+int comment_tree_list_count(CommentTreeAddress p) {
+  if (comment_tree_list_is_empty(p)) {
+    return 0;
+  } else {
+    return 1 + comment_tree_list_count((*p).next);
+  }
+}
+
+CommentTreeAddress comment_tree_list_balik_list(CommentTreeAddress p) {
+  if (!comment_tree_list_is_empty(p)) {
+    CommentTreeAddress prev = NULL;
+    CommentTreeAddress this = p;
+    CommentTreeAddress next = (*p).next;
+    while (!comment_tree_list_is_empty(next)) {
+      (*this).next = prev;
+      prev = this;
+      this = next;
+      next = (*this).next;
+    }
+    (*this).next = prev;
+    p = this;
+  }
+  return p;
+}
+
+// bool get_comment_tree_list_by_id(CommentTreeList p, Id nilai,
+//                                  CommentTree *get) {
+//   CommentTreeAddress found = comment_tree_list_search_by_id(p.first, nilai);
+//   if (!comment_tree_list_is_empty(found)) {
+//     *get = found->info;
+//   }
+//   return !comment_tree_list_is_empty(found);
+// }
+
+#endif
