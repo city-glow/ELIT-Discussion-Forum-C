@@ -9,6 +9,7 @@ typedef struct {
     Id user_id;
     Id board_id;
     bool edited;
+    bool approved;
     char title[MAX_TITLE + 1];
     char *content;
 } Post;

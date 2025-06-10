@@ -26,13 +26,13 @@ void post_isi_node(PostAddress *p, Post nilai) {
 }
 
 void post_tampil_list(PostAddress p) {
-  if (post_is_empty(p)) {
-    printf("NULL\n");
-  } else {
-
-    printf("%s -> ", (*p).info.title);
-    post_tampil_list((*p).next);
+  while (p != NULL) {
+    if (p->info.approved) {
+        printf("%s -> ", p->info.title);
+    }
+    p = p->next;
   }
+  printf("NULL\n");
 }
 
 void post_insert_awal(PostAddress *p, PostAddress PNew) {

@@ -7,6 +7,12 @@ typedef struct IdTElmtList {
   Id info;
   IdAddress nextId;
 } IdElmtList;
-typedef IdAddress IdList;
+
+typedef struct {
+  IdAddress first;
+} IdList;
+
+void idlist_add(IdList *list, Id id);
+void idlist_delete_by_id(IdList *list, Id target);
 
 #endif
