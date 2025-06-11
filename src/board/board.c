@@ -7,7 +7,7 @@
 void create_board(Board *board, Id owner_id, char *title) {
     strcpy(board->title, title);
     board->owner_id = owner_id;
-    board->queue = NULL;
+    board->queue.first = NULL;
 }
 
 #endif
