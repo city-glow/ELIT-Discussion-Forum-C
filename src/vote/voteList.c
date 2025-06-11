@@ -5,6 +5,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void get_vote_result(VoteList vote_list, int *vote_sum, Id current_user_id,
+                     Id target_id, VoteTargetType target_type, Id *my_vote_id,
+                     bool *has_voted) {
+  int upvotes = 0;
+  int downvotes = 0;
+  *my_vote_id = 0;
+  *has_voted = false;
+
+  VoteAddress current = vote_list.first;
+
+  while (current != NULL) {
+    if (current->info.target_id == target_id &&
+        current->info.target_type == target_type) {
+
+      if (current->info.is_upvote) {
+        upvotes++;
+      } else {
+        downvotes++;
+      }
+
+      if (current->info.user_id == current_user_id) {
+        *my_vote_id = current->info.id;
+        *has_voted = true;
+      }
+    }
+
+    current = current->next;
+  }
+
+  *vote_sum = upvotes - downvotes;
+}
+
 bool vote_is_empty(VoteAddress p) { return (p == NULL); }
 
 void vote_create_list(VoteList *p) {

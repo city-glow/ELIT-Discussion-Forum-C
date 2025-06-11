@@ -35,6 +35,8 @@ ifeq ($(OS),Windows_NT)
 		src/comment/commentTreeList.c \
 		src/vote/vote.c \
 		src/vote/voteList.c \
+		src/array/item.c \
+		src/array/itemArray.c \
 		include/phc-winner-argon2/src/argon2.c \
 		include/phc-winner-argon2/src/core.c \
 		include/phc-winner-argon2/src/encoding.c \
@@ -57,6 +59,8 @@ else
 		src/comment/commentTreeList.c \
 		src/vote/vote.c \
 		src/vote/voteList.c \
+		src/array/item.c \
+		src/array/itemArray.c \
 		src/main.c
 endif
 # Object files

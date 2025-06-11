@@ -12,7 +12,9 @@ typedef struct {
   VoteAddress first;
   Id id_max;
 } VoteList;
-
+void get_vote_result(VoteList vote_list, int *vote_sum, Id current_user_id,
+                     Id target_id, VoteTargetType target_type, Id *my_vote_id,
+                     bool *has_voted);
 bool vote_is_empty(VoteAddress p);
 void vote_create_node(VoteAddress *p);
 void vote_create_list(VoteList *p);

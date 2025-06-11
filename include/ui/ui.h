@@ -25,5 +25,9 @@ void get_vote_result(VoteList vote_list, int *vote_sum, Id current_user_id,
 void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
                       User logged_user, UserList *user_list,
                       BoardList *board_list, CommentTreeList *comment_tree_list);
+void handle_single_comment_page(Id comment_id, PostList *post_list,
+                                VoteList *vote_list, User logged_user,
+                                UserList *user_list, BoardList *board_list,
+                                CommentTreeList *comment_tree_list);
 
 #endif

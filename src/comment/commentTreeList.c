@@ -25,12 +25,13 @@ void comment_tree_list_isi_node(CommentTreeAddress *p, CommentTree nilai) {
   }
 }
 
-void comment_tree_list_tampil_list(CommentTreeAddress p) {
+void comment_tree_list_tampil_list(CommentTreeAddress p, UserList user_list,
+                                   VoteList vote_list, User logged_user) {
   if (comment_tree_list_is_empty(p)) {
     printf("NULL\n");
   } else {
-    comment_tree_print_tree(p->info);
-    comment_tree_list_tampil_list((*p).next);
+    comment_tree_print_tree(p->info, user_list, vote_list, logged_user);
+    comment_tree_list_tampil_list((*p).next, user_list, vote_list, logged_user);
   }
 }
 
@@ -76,6 +77,8 @@ CommentTreeAddress comment_tree_list_search_by_root_id(CommentTreeAddress p,
 }
 
 CommentAddress comment_tree_list_search_by_id(CommentTreeAddress p, Id nilai) {
+  if (nilai <= 0)
+    return NULL;
   while (!comment_tree_list_is_empty(p)) {
     CommentAddress result = comment_tree_search_by_id(p->info, nilai);
     if (result != NULL) {
@@ -204,9 +207,8 @@ void comment_delete_all_post_id(CommentTreeAddress *p, Id nilai,
   }
 }
 
-
-
-void comment_tree_list_delete_comment_by_id(CommentTreeList *p, Id nilai, Comment *X) {
+void comment_tree_list_delete_comment_by_id(CommentTreeList *p, Id nilai,
+                                            Comment *X) {
   if (p == NULL || p->first == NULL)
     return;
 
@@ -233,8 +235,6 @@ void comment_tree_list_delete_comment_by_id(CommentTreeList *p, Id nilai, Commen
     tree = tree->next;
   }
 }
-
-
 
 void comment_tree_list_deallocation(CommentTreeAddress *p) {
   while (!comment_tree_list_is_empty(*p)) {
