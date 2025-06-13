@@ -28,6 +28,8 @@ ifeq ($(OS),Windows_NT)
 		src/ui/ui.c \
 		src/board/board.c \
 		src/board/boardList.c \
+		src/board/moderateThisList.c \
+		src/board/moderateThisQueue.c \
 		src/post/post.c \
 		src/post/postList.c \
 		src/comment/comment.c \
