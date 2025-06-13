@@ -1,3 +1,6 @@
+#ifndef IDLIST_C
+#define IDLIST_C
+
 #include "../../include/id/idList.h"
 #include <stdlib.h>
 
@@ -37,3 +40,5 @@ void idlist_delete_by_id(IdList *list, Id target) {
         curr = curr->nextId;
     }
 }
+
+#endif

@@ -91,41 +91,41 @@ void moderate_deallocation(ModerateAddress *p) {
 // Implement missing functions idlist_add and idlist_delete_by_id as wrappers
 
 // Assuming IdList is similar to ModerateList, define a struct for IdList and IdAddress
-typedef struct IdNode *IdAddress;
-typedef struct IdNode {
-    Id info;
-    IdAddress nextId;
-} IdNode;
+// typedef struct IdNode *IdAddress;
+// typedef struct IdNode {
+//     Id info;
+//     IdAddress nextId;
+// } IdNode;
 
-typedef struct {
-    IdAddress first;
-} IdList;
+// typedef struct {
+//     IdAddress first;
+// } IdList;
 
-// Add an Id to the IdList (similar to idlist_add)
-void idlist_add(IdList *list, Id id) {
-    IdAddress newNode = (IdAddress)malloc(sizeof(IdNode));
-    if (newNode != NULL) {
-        newNode->info = id;
-        newNode->nextId = list->first;
-        list->first = newNode;
-    }
-}
+// // Add an Id to the IdList (similar to idlist_add)
+// void idlist_add(IdList *list, Id id) {
+//     IdAddress newNode = (IdAddress)malloc(sizeof(IdNode));
+//     if (newNode != NULL) {
+//         newNode->info = id;
+//         newNode->nextId = list->first;
+//         list->first = newNode;
+//     }
+// }
 
-// Delete an Id from the IdList by id (similar to idlist_delete_by_id)
-void idlist_delete_by_id(IdList *list, Id id) {
-    IdAddress prev = NULL;
-    IdAddress curr = list->first;
-    while (curr != NULL) {
-        if (curr->info == id) {
-            if (prev == NULL) {
-                list->first = curr->nextId;
-            } else {
-                prev->nextId = curr->nextId;
-            }
-            free(curr);
-            return;
-        }
-        prev = curr;
-        curr = curr->nextId;
-    }
-}
+// // Delete an Id from the IdList by id (similar to idlist_delete_by_id)
+// void idlist_delete_by_id(IdList *list, Id id) {
+//     IdAddress prev = NULL;
+//     IdAddress curr = list->first;
+//     while (curr != NULL) {
+//         if (curr->info == id) {
+//             if (prev == NULL) {
+//                 list->first = curr->nextId;
+//             } else {
+//                 prev->nextId = curr->nextId;
+//             }
+//             free(curr);
+//             return;
+//         }
+//         prev = curr;
+//         curr = curr->nextId;
+//     }
+// }

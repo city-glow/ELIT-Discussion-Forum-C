@@ -78,7 +78,9 @@ void comment_tree_level_order(CommentTree p) {
 }
 
 void comment_tree_print_tree_rec(CommentAddress r, int *level,
-                                 CommentAddress node, int *num, UserList user_list, VoteList vote_list, User logged_user) {
+                                 CommentAddress node, int *num,
+                                 UserList user_list, VoteList vote_list,
+                                 User logged_user) {
   if (comment_address_is_empty(node))
     return;
   printf("%d. ", *num);
@@ -90,7 +92,8 @@ void comment_tree_print_tree_rec(CommentAddress r, int *level,
     int ancestorCount = 0;
     while (!comment_address_is_empty(ancestor->parent)) {
       if (ancestorCount < depth) {
-        hasSibling[ancestorCount++] = !comment_address_is_empty(ancestor->next_sibling);
+        hasSibling[ancestorCount++] =
+            !comment_address_is_empty(ancestor->next_sibling);
       }
       ancestor = ancestor->parent;
     }
@@ -106,24 +109,28 @@ void comment_tree_print_tree_rec(CommentAddress r, int *level,
       printf("└─ ");
     }
   }
-  UserAddress user_found = user_search_by_id(user_list.first, node->info.user_id);
+  UserAddress user_found =
+      user_search_by_id(user_list.first, node->info.user_id);
   if (user_found) {
 
-  printf("user[%s]: %s\n", user_found->info.username, node->info.content);
+    printf("user[%s]: %s\n", user_found->info.username, node->info.content);
   }
   CommentAddress child = node->first_child;
   while (!comment_address_is_empty(child)) {
     int nextLevel = *level + 1;
     (*num)++;
-    comment_tree_print_tree_rec(r, &nextLevel, child, num, user_list, vote_list, logged_user);
+    comment_tree_print_tree_rec(r, &nextLevel, child, num, user_list, vote_list,
+                                logged_user);
     child = child->next_sibling;
   }
 }
 
-void comment_tree_print_tree(CommentTree p, UserList user_list, VoteList vote_list, User logged_user) {
+void comment_tree_print_tree(CommentTree p, UserList user_list,
+                             VoteList vote_list, User logged_user) {
   int level = 0;
   int num = 1;
-  comment_tree_print_tree_rec(p.root, &level, p.root, &num, user_list, vote_list, logged_user);
+  comment_tree_print_tree_rec(p.root, &level, p.root, &num, user_list,
+                              vote_list, logged_user);
 }
 
 CommentAddress comment_tree_search_by_id_rec(CommentAddress c, Id id) {
@@ -132,8 +139,12 @@ CommentAddress comment_tree_search_by_id_rec(CommentAddress c, Id id) {
   if (c->info.id == id)
     return c;
   CommentAddress child = c->first_child;
+  CommentAddress result;
   while (child != NULL) {
-    return comment_tree_search_by_id_rec(child, id);
+    result = comment_tree_search_by_id_rec(child, id);
+    if (result != NULL) {
+        return result;
+    }
     child = child->next_sibling;
   }
   return NULL;
@@ -281,7 +292,8 @@ bool delete_comment_by_id_rec(CommentAddress r, Id nilai, bool valid) {
   // Hapus semua anak terlebih dahulu
 }
 
-// CommentAddress get_preorder_helper(CommentAddress node, int targetIndex, int *current) {
+// CommentAddress get_preorder_helper(CommentAddress node, int targetIndex, int
+// *current) {
 //     if (node == NULL) return NULL;
 
 //     // Match found
@@ -289,26 +301,36 @@ bool delete_comment_by_id_rec(CommentAddress r, Id nilai, bool valid) {
 //     (*current)++; // Move to next node
 
 //     // Traverse the first child
-//     CommentAddress result = get_preorder(node->first_child, targetIndex, current);
-//     if (result) return result;
+//     CommentAddress result = get_preorder(node->first_child, targetIndex,
+//     current); if (result) return result;
 
 //     // Traverse the next sibling
 //     return get_preorder(node->next_sibling, targetIndex, current);
 // }
 
-CommentAddress get_preorder(CommentAddress node, int targetIndex, int *current) {
-    if (node == NULL) return NULL;
+CommentAddress get_preorder(CommentAddress node, int targetIndex,
+                            int *current) {
+  if (node == NULL)
+    return NULL;
 
-    // Match found
-    if (*current == targetIndex) return node;
-    (*current)++; // Move to next node
+  printf("%d", *current);
+  // Check current node
+  if (*current == targetIndex)
+    return node;
 
-    // Traverse the first child
-    CommentAddress result = get_preorder(node->first_child, targetIndex, current);
-    if (result) return result;
+  // Increment current index before traversing children
 
-    // Traverse the next sibling
-    return get_preorder(node->next_sibling, targetIndex, current);
+  // Traverse children in preorder
+  CommentAddress child = node->first_child;
+  while (!comment_address_is_empty(child)) {
+    ++(*current);
+    CommentAddress result = get_preorder(child, targetIndex, current);
+    if (result != NULL)
+      return result;
+    child = child->next_sibling;
+  }
+  printf("buba");
+  return NULL; // Not found in this subtree
 }
 
 #endif

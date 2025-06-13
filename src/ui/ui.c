@@ -247,18 +247,15 @@ void handle_comment_selection(Item selected_item, UserList *user_list,
       comment_tree_print_tree(comment_tree->info, *user_list, *vote_list,
                               logged_user);
       printf("0. Back\n");
-      scanf("%d", &choice);
+      scanf(" %d", &choice);
 
-      if (choice != 0) {
-        int index = 0;
-        CommentAddress get =
-            get_preorder(comment_tree->info.root, choice - 1, &index);
-        if (get) {
-
-          handle_single_comment_page(get->info.id, post_list, vote_list,
-                                     logged_user, user_list, board_list,
-                                     comment_list);
-        }
+      int index = 1;
+      CommentAddress get =
+          get_preorder(comment_tree->info.root, choice, &index);
+      if (get) {
+        handle_single_comment_page(get->info.id, post_list, vote_list,
+                                   logged_user, user_list, board_list,
+                                   comment_list);
       }
     } while (choice != 0);
     // Add interaction options (vote, reply, etc.)
@@ -310,7 +307,7 @@ int ui_show_single_comment(Comment comment, bool has_parent,
   printf("Pilihan: ");
 
   int choice;
-  scanf("%d", &choice);
+  scanf(" %d", &choice);
   getchar();
   return choice;
 }
