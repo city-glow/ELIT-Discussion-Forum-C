@@ -3,6 +3,7 @@
 
 #include "../board/boardList.h"
 #include "../comment/commentTreeList.h"
+#include "../array/item.h"
 #include "../post/postList.h"
 #include "../user/userList.h"
 #include "../vote/voteList.h"
@@ -12,6 +13,7 @@ void ui_pause();
 int ui_show_main_menu();
 void ui_search_post();
 void ui_create_post();
+void print_vote(bool has_voted, Vote my_vote, int vote_sum);
 void ui_show_trending_posts();
 int ui_show_dashboard(User user);
 void handle_dashboard(BoardList *board_list, PostList *post_list,
@@ -29,5 +31,9 @@ void handle_single_comment_page(Id comment_id, PostList *post_list,
                                 VoteList *vote_list, User logged_user,
                                 UserList *user_list, BoardList *board_list,
                                 CommentTreeList *comment_tree_list);
+void handle_comment_selection(Item selected_item, UserList *user_list,
+                              CommentTreeList *comment_list,
+                              VoteList *vote_list, PostList *post_list,
+                              BoardList *board_list, User logged_user);
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef COMMENTTREE_C
 #define COMMENTTREE_C
 #include "../../include/comment/commentTree.h"
-#include "../../include/user/userList.h"
+#include "../../include/ui/ui.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -112,9 +112,20 @@ void comment_tree_print_tree_rec(CommentAddress r, int *level,
   UserAddress user_found =
       user_search_by_id(user_list.first, node->info.user_id);
   if (user_found) {
-
-    printf("user[%s]: %s\n", user_found->info.username, node->info.content);
+    printf("user[%s]: %s | ", user_found->info.username, node->info.content);
   }
+  int vote_sum;
+  Id my_vote_id;
+  bool has_voted;
+  get_vote_result(vote_list, &vote_sum, logged_user.id, node->info.id,
+                  VOTE_TARGET_COMMENT, &my_vote_id, &has_voted);
+  VoteAddress my_vote = NULL;
+  if (has_voted) {
+    my_vote = vote_search_by_id(vote_list.first, my_vote_id);
+  }
+  print_vote(has_voted, my_vote ? my_vote->info : (Vote){0}, vote_sum);
+  printf("\n");
+
   CommentAddress child = node->first_child;
   while (!comment_address_is_empty(child)) {
     int nextLevel = *level + 1;
@@ -143,7 +154,7 @@ CommentAddress comment_tree_search_by_id_rec(CommentAddress c, Id id) {
   while (child != NULL) {
     result = comment_tree_search_by_id_rec(child, id);
     if (result != NULL) {
-        return result;
+      return result;
     }
     child = child->next_sibling;
   }
