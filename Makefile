@@ -11,7 +11,7 @@ ifeq ($(OS),Windows_NT)
 else
 	# Linux/macOS settings
 	CFLAGS = -Wall -Wextra -g
-	LIBS = -lssl -lcrypto -largon2
+	LIBS = -largon2
 	DEL = rm -f
 	SEP = /
 endif
@@ -74,30 +74,36 @@ else
 		src/main.c
 endif
 # Object files
-OBJS = $(SRCS:.c=.o)
+
+OBJS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
+
 
 # Default target
-all: $(TARGET)
+BUILD_DIR = build
+BIN_DIR = $(BUILD_DIR)
+
+all: $(BUILD_DIR) $(TARGET)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
 
 # Linking
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/$@ $(OBJS) $(LIBS)
 
 # Compilation
-%.o: %.c
+
+$(BUILD_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
+
 
 # Clean
 clean:
 ifeq ($(OS),Windows_NT)
-	@cmd /C del /F /Q src\user\*.o 2> nul
-	@cmd /C del /F /Q src\auth\*.o 2> nul
-	@cmd /C del /F /Q src\ui\*.o 2> nul
-	@cmd /C del /F /Q src\board\*.o 2> nul
-	@cmd /C del /F /Q src\vote\*.o 2> nul
-	@cmd /C del /F /Q src\post\*.o 2> nul
-	@cmd /C del /F /Q src\main.o 2> nul
+	@rmdir /S /Q $(BUILD_DIR) 2> nul
 	@cmd /C del /F /Q $(TARGET).exe 2> nul
 else
-	$(DEL) $(OBJS) $(TARGET)
+	$(DEL) -r $(BUILD_DIR) $(BIN_DIR)/$(TARGET)
 endif
