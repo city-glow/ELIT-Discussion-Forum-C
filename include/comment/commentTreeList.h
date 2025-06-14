@@ -27,6 +27,8 @@ CommentTreeAddress comment_tree_list_search_by_post_id(CommentTreeAddress p, Id 
 void comment_tree_list_delete_by_id(CommentTreeAddress *p, Id nilai, CommentTree *X);
 void comment_tree_list_deallocation(CommentTreeAddress *p);
 int comment_tree_list_count(CommentTreeAddress p);
+void comment_delete_all_post_id(CommentTreeAddress *p, Id nilai,
+                                CommentTree *X);
 CommentTreeAddress comment_tree_list_balik_list(CommentTreeAddress p);
 CommentTreeAddress comment_tree_list_search_by_root_id(CommentTreeAddress p,
                                                        Id nilai);

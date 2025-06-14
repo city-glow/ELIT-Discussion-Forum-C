@@ -164,6 +164,50 @@ void vote_delete_by_id(VoteAddress *p, Id nilai, Vote *X) {
   vote_delete_by_address(p, target, X);
 }
 
+// Delete all votes by target_id and target_type
+void vote_delete_all_by_target(VoteAddress *p, Id target_id, VoteTargetType target_type) {
+  VoteAddress curr = *p;
+  VoteAddress prev = NULL;
+  while (curr != NULL) {
+    VoteAddress next = curr->next;
+    if (curr->info.target_id == target_id && curr->info.target_type == target_type) {
+      Vote dummy;
+      if (prev == NULL) {
+        vote_del_awal(p, &dummy);
+        curr = *p;
+      } else {
+        vote_del_after(&prev, &dummy);
+        curr = prev->next;
+      }
+    } else {
+      prev = curr;
+      curr = next;
+    }
+  }
+}
+
+// Delete all votes by user_id
+void vote_delete_all_by_user(VoteAddress *p, Id user_id) {
+  VoteAddress curr = *p;
+  VoteAddress prev = NULL;
+  while (curr != NULL) {
+    VoteAddress next = curr->next;
+    if (curr->info.user_id == user_id) {
+      Vote dummy;
+      if (prev == NULL) {
+        vote_del_awal(p, &dummy);
+        curr = *p;
+      } else {
+        vote_del_after(&prev, &dummy);
+        curr = prev->next;
+      }
+    } else {
+      prev = curr;
+      curr = next;
+    }
+  }
+}
+
 void vote_deallocation(VoteAddress *p) {
   while (!vote_is_empty(*p)) {
     Vote i;

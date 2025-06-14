@@ -1,6 +1,8 @@
 #ifndef POSTLIST_H
 #define POSTLIST_H
 #include "post.h"
+#include "../comment/commentTreeList.h"
+#include "../vote/voteList.h"
 #include <stdbool.h>
 
 typedef struct PostTElmtList *PostAddress;
@@ -21,7 +23,7 @@ void post_tampil_list(PostAddress p);
 void post_insert(PostList *p, PostAddress PNew);
 PostAddress post_search_by_id(PostAddress p, Id nilai);
 // void Post_delete_by_address(PostAddress *p, PostAddress pDel, Post *X);
-void post_delete_by_id(PostAddress *p, Id nilai, Post *X);
+void post_delete_by_id(PostAddress *p, Id nilai, Post *X, VoteList *vote_list, CommentTreeList *comment_tree_list);
 void post_deallocation(PostAddress *p);
 int post_count(PostAddress p);
 PostAddress post_balik_list(PostAddress p);
