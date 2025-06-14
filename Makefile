@@ -39,6 +39,10 @@ ifeq ($(OS),Windows_NT)
 		src/vote/voteList.c \
 		src/array/item.c \
 		src/array/itemArray.c \
+		src/id/id.c \
+		src/id/idList.c \
+		src/board/moderateThisList.c \
+		src/board/moderateThisQueue.c \
 		include/phc-winner-argon2/src/argon2.c \
 		include/phc-winner-argon2/src/core.c \
 		include/phc-winner-argon2/src/encoding.c \
