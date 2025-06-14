@@ -4,7 +4,7 @@ CC = gcc
 # Detect OS
 # Detect OS
 ifeq ($(OS),Windows_NT)
-    CFLAGS = -Wall -Wextra -g -Iinclude/phc-winner-argon2/
+    CFLAGS = -Wall -Wextra -g
 	LIBS = -Llibs/ -largon2
     DEL = cmd /C del /F /Q
     SEP = \\
