@@ -1,3 +1,6 @@
+// TODO: Trending UI and handle
+// TODO:
+
 #include "../../include/ui/ui.h"
 #include "../../include/array/item.h"
 #include "../../include/array/itemArray.h"
@@ -448,7 +451,16 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
       }
       free(top_comments);
     }
-  } while (menu_choice != 0);
+  } while (menu_choice != 0 && menu_choice != 4);
+  if (menu_choice == 4) {
+    PostAddress this_post = post_search_by_id(post_list->first, post_id);
+    UserAddress poster =
+        user_search_by_id(user_list->first, this_post->info.user_id);
+    if (this_post->info.user_id == poster->info.id) {
+        Post X;
+        post_delete_by_id(&(post_list->first), this_post->info.id, &X, vote_list, comment_tree_list);
+    }
+  }
 }
 
 void handle_single_comment_page(Id comment_id, PostList *post_list,

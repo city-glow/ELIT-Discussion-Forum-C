@@ -145,7 +145,7 @@ void post_delete_by_id(PostAddress *p, Id nilai, Post *X, VoteList *vote_list,
   post_delete_by_address(p, target, X);
   vote_delete_all_by_target(&(*vote_list).first, X->id, VOTE_TARGET_POST);
   CommentTree Y;
-  comment_delete_all_post_id(&(comment_tree_list->first), X->id, &Y);
+  comment_delete_all_post_id_with_votes(&(comment_tree_list->first), X->id, &Y, vote_list);
 }
 
 void post_deallocation(PostAddress *p) {

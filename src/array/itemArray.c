@@ -41,4 +41,38 @@ Item *generate_top_comments_array(CommentTreeList comment_list,
   return items;
 }
 
+Item *generate_top_posts_array(PostList post_list, VoteList vote_list,
+                               int *count, Id board) {
+  int size = post_count(post_list.first);
+  Item *items = (Item *)malloc(size * sizeof(Item));
+  *count = 0;
+  PostAddress current = post_list.first;
+  if (board == -1) {
+
+    while (current != NULL) {
+      items[*count].info.p = current->info;
+      items[*count].type = ITEM_TYPE_POST;
+      items[*count].id = current->info.id;
+      items[*count].vote_sum =
+          get_comment_vote_sum(vote_list, items[*count].id);
+      (*count)++;
+      current = current->next;
+    }
+  } else {
+    while (current != NULL) {
+      if (current->info.board_id == board) {
+        items[*count].info.p = current->info;
+        items[*count].type = ITEM_TYPE_POST;
+        items[*count].id = current->info.id;
+        items[*count].vote_sum =
+            get_comment_vote_sum(vote_list, items[*count].id);
+        (*count)++;
+        current = current->next;
+      }
+    }
+  }
+  qsort(items, *count, sizeof(Item), compare_vote_sum);
+  return items;
+}
+
 #endif

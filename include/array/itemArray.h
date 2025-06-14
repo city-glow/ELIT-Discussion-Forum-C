@@ -1,6 +1,7 @@
 #ifndef ITEMARRAY_H
 #define ITEMARRAY_H
 #include "../comment/commentTreeList.h"
+#include "../post/postList.h"
 #include "../vote/voteList.h"
 #include "item.h"
 

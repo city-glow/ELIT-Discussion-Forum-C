@@ -1,6 +1,7 @@
 #ifndef COMMENTTREELIST_H
 #define COMMENTTREELIST_H
 #include "commentTree.h"
+#include "../vote/voteList.h"
 #include <stdbool.h>
 
 typedef struct CommentTreeTElmtList *CommentTreeAddress;
@@ -32,6 +33,9 @@ void comment_delete_all_post_id(CommentTreeAddress *p, Id nilai,
 CommentTreeAddress comment_tree_list_balik_list(CommentTreeAddress p);
 CommentTreeAddress comment_tree_list_search_by_root_id(CommentTreeAddress p,
                                                        Id nilai);
+void comment_delete_all_post_id_with_votes(CommentTreeAddress *p, Id nilai,
+                                           CommentTree *X,
+                                           VoteList *vote_list);
 
 void save_comment_tree_list(CommentTreeList *list, const char *filename);
 void load_comment_tree_list(CommentTreeList *list, const char *filename);
