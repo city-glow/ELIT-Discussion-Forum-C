@@ -11,7 +11,26 @@
 #include "../include/user/userList.h"
 #include "../include/vote/voteList.h"
 
+#ifdef _WIN32
+#include <windows.h>
+void enable_windows_ansi() {
+  system("chcp 65001 > nul"); // Enable UTF-8
+  HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+  if (hOut != INVALID_HANDLE_VALUE) {
+    DWORD dwMode = 0;
+    if (GetConsoleMode(hOut, &dwMode)) {
+      dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+      SetConsoleMode(hOut, dwMode);
+    }
+  }
+}
+#else
+void enable_windows_ansi() {} // No-op on non-Windows
+#endif
+
 int main() {
+  enable_windows_ansi();
+
   UserList user_list;
   BoardList board_list;
   PostList post_list;
@@ -124,7 +143,6 @@ int main() {
             }
           }
         }
-
       }
       }
     } else {
