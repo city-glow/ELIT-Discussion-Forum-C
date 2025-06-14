@@ -2,19 +2,21 @@
 CC = gcc
 
 # Detect OS
+# Detect OS
 ifeq ($(OS),Windows_NT)
-	# Windows settings
-	CFLAGS = -Wall -Wextra -g -Iinclude/phc-winner-argon2/include
-	LIBS =
-	DEL = cmd /C del /F /Q
-	SEP = \\
+    CFLAGS = -Wall -Wextra -g -Iinclude/phc-winner-argon2/include
+    LIBS =
+    DEL = cmd /C del /F /Q
+    SEP = \\
+    MKDIR_P = powershell -Command "New-Item -ItemType Directory -Force -Path '$(subst /,\\,$(1))' >$null"
 else
-	# Linux/macOS settings
-	CFLAGS = -Wall -Wextra -g
-	LIBS = -largon2
-	DEL = rm -f
-	SEP = /
+    CFLAGS = -Wall -Wextra -g
+    LIBS = -largon2
+    DEL = rm -f
+    SEP = /
+    MKDIR_P = mkdir -p $(1)
 endif
+
 
 # Target executable
 TARGET = app
@@ -41,8 +43,6 @@ ifeq ($(OS),Windows_NT)
 		src/array/itemArray.c \
 		src/id/id.c \
 		src/id/idList.c \
-		src/board/moderateThisList.c \
-		src/board/moderateThisQueue.c \
 		include/phc-winner-argon2/src/argon2.c \
 		include/phc-winner-argon2/src/core.c \
 		include/phc-winner-argon2/src/encoding.c \
@@ -85,7 +85,7 @@ BIN_DIR = $(BUILD_DIR)
 all: $(BUILD_DIR) $(TARGET)
 
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+	$(call MKDIR,$(BUILD_DIR))
 
 
 # Linking
@@ -93,17 +93,17 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/$@ $(OBJS) $(LIBS)
 
 # Compilation
-
 $(BUILD_DIR)/%.o: %.c
-	@mkdir -p $(dir $@)
+	@$(call MKDIR_P,$(dir $@))
 	$(CC) $(CFLAGS) -c $< -o $@
+
 
 
 # Clean
 clean:
 ifeq ($(OS),Windows_NT)
-	@rmdir /S /Q $(BUILD_DIR) 2> nul
-	@cmd /C del /F /Q $(TARGET).exe 2> nul
+	@if exist "$(BUILD_DIR)" powershell -Command "Remove-Item -Recurse -Force '$(BUILD_DIR)'"
+	@if exist "$(TARGET).exe" del /F /Q $(TARGET).exe
 else
 	$(DEL) -r $(BUILD_DIR) $(BIN_DIR)/$(TARGET)
 endif
