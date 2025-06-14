@@ -176,3 +176,91 @@ PostAddress post_balik_list(PostAddress p) {
   return p;
 }
 #endif
+
+// =====================
+// Save/Load Functions
+// =====================
+
+void save_post_list(PostList *list, const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) {
+        printf("Failed to open %s for writing\n", filename);
+        return;
+    }
+    // Save id_max
+    fwrite(&(list->id_max), sizeof(Id), 1, file);
+
+    // Count posts
+    int count = 0;
+    PostAddress current = list->first;
+    while (current != NULL) {
+        count++;
+        current = current->next;
+    }
+    fwrite(&count, sizeof(int), 1, file);
+
+    // Write each post
+    current = list->first;
+    while (current != NULL) {
+        // Write struct fields except content pointer
+        fwrite(&(current->info.id), sizeof(Id), 1, file);
+        fwrite(&(current->info.user_id), sizeof(Id), 1, file);
+        fwrite(&(current->info.board_id), sizeof(Id), 1, file);
+        fwrite(&(current->info.edited), sizeof(bool), 1, file);
+        fwrite(&(current->info.approved), sizeof(bool), 1, file);
+        fwrite(current->info.title, sizeof(char), MAX_TITLE + 1, file);
+
+        // Write content string length and content
+        int content_len = current->info.content ? strlen(current->info.content) : 0;
+        fwrite(&content_len, sizeof(int), 1, file);
+        if (content_len > 0) {
+            fwrite(current->info.content, sizeof(char), content_len, file);
+        }
+        current = current->next;
+    }
+    fclose(file);
+}
+
+void load_post_list(PostList *list, const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        printf("Failed to open %s for reading\n", filename);
+        return;
+    }
+    post_create_list(list);
+
+    // Load id_max
+    fread(&(list->id_max), sizeof(Id), 1, file);
+
+    int count = 0;
+    fread(&count, sizeof(int), 1, file);
+
+    for (int i = 0; i < count; ++i) {
+        Post temp;
+        fread(&(temp.id), sizeof(Id), 1, file);
+        fread(&(temp.user_id), sizeof(Id), 1, file);
+        fread(&(temp.board_id), sizeof(Id), 1, file);
+        fread(&(temp.edited), sizeof(bool), 1, file);
+        fread(&(temp.approved), sizeof(bool), 1, file);
+        fread(temp.title, sizeof(char), MAX_TITLE + 1, file);
+
+        int content_len = 0;
+        fread(&content_len, sizeof(int), 1, file);
+        if (content_len > 0) {
+            temp.content = (char *)malloc(content_len + 1);
+            fread(temp.content, sizeof(char), content_len, file);
+            temp.content[content_len] = '\0';
+        } else {
+            temp.content = strdup("");
+        }
+
+        PostAddress new_node;
+        post_create_node(&new_node);
+        post_isi_node(&new_node, temp);
+        post_insert_akhir(&(list->first), new_node);
+
+        // Free temp.content because post_isi_node duplicates it
+        free(temp.content);
+    }
+    fclose(file);
+}

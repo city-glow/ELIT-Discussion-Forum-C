@@ -25,5 +25,7 @@ void post_delete_by_id(PostAddress *p, Id nilai, Post *X);
 void post_deallocation(PostAddress *p);
 int post_count(PostAddress p);
 PostAddress post_balik_list(PostAddress p);
+void save_post_list(PostList *list, const char *filename);
+void load_post_list(PostList *list, const char *filename);
 
 #endif

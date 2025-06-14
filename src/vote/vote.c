@@ -1,5 +1,5 @@
-#ifndef USER_C
-#define USER_C
+#ifndef VOTE_C
+#define VOTE_C
 #include "../../include/vote/vote.h"
 // #include <string.h>
 // #include <stdio.h>

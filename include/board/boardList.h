@@ -28,4 +28,7 @@ int board_count(BoardAddress p);
 BoardAddress board_balik_list(BoardAddress p);
 bool get_board_by_id(BoardList p, Id nilai, Board *get);
 int board_insert_and_get_id(BoardList *p, BoardAddress PNew);
+bool save_board_list(const BoardList *boardList, const char *filename);
+bool load_board_list(BoardList *boardList, const char *filename);
+
 #endif

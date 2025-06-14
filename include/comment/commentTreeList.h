@@ -30,4 +30,7 @@ int comment_tree_list_count(CommentTreeAddress p);
 CommentTreeAddress comment_tree_list_balik_list(CommentTreeAddress p);
 CommentTreeAddress comment_tree_list_search_by_root_id(CommentTreeAddress p,
                                                        Id nilai);
+
+void save_comment_tree_list(CommentTreeList *list, const char *filename);
+void load_comment_tree_list(CommentTreeList *list, const char *filename);
 #endif

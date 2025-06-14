@@ -18,7 +18,7 @@ bool board_is_moderator(Board *board, Id user_id) {
 }
 
 void board_add_moderate_request(Board *board, Id request_id) {
-    idlist_add(&board->queue, request_id);
+    idlist_add(&(board->queue), request_id);
 }
 
 // Approve a moderation request by request_id

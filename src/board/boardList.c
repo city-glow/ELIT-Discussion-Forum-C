@@ -61,7 +61,7 @@ BoardAddress board_search_by_id(BoardAddress p, Id nilai) {
   return NULL;
 }
 
-BoardAddress board_search_by_title(BoardAddress p, char* title) {
+BoardAddress board_search_by_title(BoardAddress p, char *title) {
   while (!board_is_empty(p)) {
     if (strcmp(p->info.title, title) == 0) {
       return p;
@@ -184,11 +184,86 @@ BoardAddress board_balik_list(BoardAddress p) {
 }
 
 bool get_board_by_id(BoardList p, Id nilai, Board *get) {
-    BoardAddress found = board_search_by_id(p.first, nilai);
-    if (!board_is_empty(found)) {
-        *get = found->info;
-    }
-    return !board_is_empty(found);
+  BoardAddress found = board_search_by_id(p.first, nilai);
+  if (!board_is_empty(found)) {
+    *get = found->info;
+  }
+  return !board_is_empty(found);
 }
 
+// Helper to save an IdList
+static void save_idlist(FILE *file, const IdList *list) {
+    int count = 0;
+    IdAddress curr = list->first;
+    // Count elements
+    while (curr) {
+        count++;
+        curr = curr->nextId;
+    }
+    fwrite(&count, sizeof(int), 1, file);
+    curr = list->first;
+    while (curr) {
+        fwrite(&(curr->info), sizeof(Id), 1, file);
+        curr = curr->nextId;
+    }
+}
+
+// Helper to load an IdList
+static void load_idlist(FILE *file, IdList *list) {
+    int count = 0;
+    fread(&count, sizeof(int), 1, file);
+    list->first = NULL;
+    for (int i = 0; i < count; ++i) {
+        Id id;
+        fread(&id, sizeof(Id), 1, file);
+        // Add to IdList (prepend is fine for queue semantics)
+        IdAddress newNode = (IdAddress)malloc(sizeof(IdElmtList));
+        newNode->info = id;
+        newNode->nextId = list->first;
+        list->first = newNode;
+    }
+}
+
+bool save_board_list(const BoardList *boardList, const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) return false;
+    fwrite(&(boardList->id_max), sizeof(Id), 1, file);
+    BoardAddress curr = boardList->first;
+    int count = 0;
+    // Count boards
+    while (curr) { count++; curr = curr->next; }
+    fwrite(&count, sizeof(int), 1, file);
+    curr = boardList->first;
+    while (curr) {
+        fwrite(&(curr->info.id), sizeof(Id), 1, file);
+        fwrite(&(curr->info.owner_id), sizeof(Id), 1, file);
+        fwrite(curr->info.title, sizeof(char), MAX_TITLE + 1, file);
+        save_idlist(file, &(curr->info.queue));
+        curr = curr->next;
+    }
+    fclose(file);
+    return true;
+}
+
+bool load_board_list(BoardList *boardList, const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) return false;
+    board_create_list(boardList);
+    fread(&(boardList->id_max), sizeof(Id), 1, file);
+    int count = 0;
+    fread(&count, sizeof(int), 1, file);
+    for (int i = 0; i < count; ++i) {
+        Board temp;
+        fread(&(temp.id), sizeof(Id), 1, file);
+        fread(&(temp.owner_id), sizeof(Id), 1, file);
+        fread(temp.title, sizeof(char), MAX_TITLE + 1, file);
+        load_idlist(file, &(temp.queue));
+        BoardAddress newNode;
+        board_create_node(&newNode);
+        board_isi_node(&newNode, temp);
+        board_insert_akhir(&(boardList->first), newNode);
+    }
+    fclose(file);
+    return true;
+}
 #endif

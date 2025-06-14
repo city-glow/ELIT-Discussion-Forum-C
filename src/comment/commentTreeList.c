@@ -278,3 +278,142 @@ CommentTreeAddress comment_tree_list_balik_list(CommentTreeAddress p) {
 // }
 
 #endif
+
+// =====================
+// Save/Load Functions
+// =====================
+
+static void save_comment_node(FILE *file, CommentAddress node) {
+    if (!node) return;
+    // Save comment fields
+    fwrite(&(node->info.id), sizeof(Id), 1, file);
+    fwrite(&(node->info.user_id), sizeof(Id), 1, file);
+    fwrite(&(node->info.post_id), sizeof(Id), 1, file);
+    fwrite(&(node->info.reply_to), sizeof(Id), 1, file);
+
+    int content_len = node->info.content ? strlen(node->info.content) : 0;
+    fwrite(&content_len, sizeof(int), 1, file);
+    if (content_len > 0) {
+        fwrite(node->info.content, sizeof(char), content_len, file);
+    }
+
+    // Save children count
+    int child_count = 0;
+    CommentAddress child = node->first_child;
+    while (child) {
+        child_count++;
+        child = child->next_sibling;
+    }
+    fwrite(&child_count, sizeof(int), 1, file);
+
+    // Save each child recursively
+    child = node->first_child;
+    while (child) {
+        save_comment_node(file, child);
+        child = child->next_sibling;
+    }
+}
+
+void save_comment_tree_list(CommentTreeList *list, const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) {
+        printf("Failed to open %s for writing\n", filename);
+        return;
+    }
+    // Save id_max
+    fwrite(&(list->id_max), sizeof(Id), 1, file);
+
+    // Count trees
+    int tree_count = 0;
+    CommentTreeAddress curr = list->first;
+    while (curr) {
+        tree_count++;
+        curr = curr->next;
+    }
+    fwrite(&tree_count, sizeof(int), 1, file);
+
+    // Save each tree
+    curr = list->first;
+    while (curr) {
+        // Save post_id
+        fwrite(&(curr->info.post_id), sizeof(Id), 1, file);
+        // Save tree existence (root != NULL)
+        int has_root = curr->info.root != NULL ? 1 : 0;
+        fwrite(&has_root, sizeof(int), 1, file);
+        if (has_root) {
+            save_comment_node(file, curr->info.root);
+        }
+        curr = curr->next;
+    }
+    fclose(file);
+}
+
+static CommentAddress load_comment_node(FILE *file) {
+    Comment temp;
+    fread(&(temp.id), sizeof(Id), 1, file);
+    fread(&(temp.user_id), sizeof(Id), 1, file);
+    fread(&(temp.post_id), sizeof(Id), 1, file);
+    fread(&(temp.reply_to), sizeof(Id), 1, file);
+
+    int content_len = 0;
+    fread(&content_len, sizeof(int), 1, file);
+    if (content_len > 0) {
+        temp.content = (char *)malloc(content_len + 1);
+        fread(temp.content, sizeof(char), content_len, file);
+        temp.content[content_len] = '\0';
+    } else {
+        temp.content = strdup("");
+    }
+
+    CommentAddress node = (CommentAddress)malloc(sizeof(CommentElmtList));
+    node->info = temp;
+    node->first_child = NULL;
+    node->next_sibling = NULL;
+    node->parent = NULL;
+
+    int child_count = 0;
+    fread(&child_count, sizeof(int), 1, file);
+
+    CommentAddress prev_child = NULL;
+    for (int i = 0; i < child_count; ++i) {
+        CommentAddress child = load_comment_node(file);
+        child->parent = node;
+        if (!node->first_child) {
+            node->first_child = child;
+        } else {
+            prev_child->next_sibling = child;
+        }
+        prev_child = child;
+    }
+    return node;
+}
+
+void load_comment_tree_list(CommentTreeList *list, const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        printf("Failed to open %s for reading\n", filename);
+        return;
+    }
+    comment_tree_list_create_list(list);
+
+    fread(&(list->id_max), sizeof(Id), 1, file);
+    int tree_count = 0;
+    fread(&tree_count, sizeof(int), 1, file);
+
+    for (int i = 0; i < tree_count; ++i) {
+        CommentTree temp_tree;
+        fread(&(temp_tree.post_id), sizeof(Id), 1, file);
+        int has_root = 0;
+        fread(&has_root, sizeof(int), 1, file);
+        if (has_root) {
+            temp_tree.root = load_comment_node(file);
+        } else {
+            temp_tree.root = NULL;
+        }
+        CommentTreeAddress new_node;
+        comment_tree_list_create_node(&new_node);
+        comment_tree_list_isi_node(&new_node, temp_tree);
+        comment_tree_list_insert_akhir(&(list->first), new_node);
+    }
+    fclose(file);
+}

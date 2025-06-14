@@ -5,11 +5,11 @@
 
 #include "../include/auth/auth.h"
 #include "../include/board/boardList.h"
+#include "../include/comment/commentTreeList.h"
 #include "../include/post/postList.h"
 #include "../include/ui/ui.h"
 #include "../include/user/userList.h"
 #include "../include/vote/voteList.h"
-#include "../include/comment/commentTreeList.h"
 
 int main() {
   UserList user_list;
@@ -18,11 +18,11 @@ int main() {
   VoteList vote_list;
   CommentTreeList comment_tree_list;
 
-  board_create_list(&board_list);
-  post_create_list(&post_list);
-  comment_tree_list_create_list(&comment_tree_list);
-  load_user_list(&user_list, "./storage/users.dat");
-  load_vote_list(&vote_list, "./storage/votes.dat");
+  load_comment_tree_list(&comment_tree_list, "../storage/comments.dat");
+  load_user_list(&user_list, "../storage/users.dat");
+  load_vote_list(&vote_list, "../storage/votes.dat");
+  load_board_list(&board_list, "../storage/boards.dat");
+  load_post_list(&post_list, "../storage/posts.dat");
 
   int pilihan;
   User logged_user;
@@ -34,43 +34,74 @@ int main() {
       switch (pilihan) {
       case 1: {
         char username[MAX_USERNAME + 1], password[100];
-        do {
-          printf("Masukkan username: ");
-          fgets(username, sizeof(username), stdin);
-          username[strcspn(username, "\n")] = 0;
-        } while (!is_username_valid(username, user_list));
+        int try_again = 1;
+        while (try_again) {
+          do {
+            printf("Masukkan username: ");
+            fgets(username, sizeof(username), stdin);
+            username[strcspn(username, "\n")] = 0;
+            if (!is_username_valid(username, user_list)) {
+              printf("Coba lagi? (y/n): ");
+              char yn[8];
+              fgets(yn, sizeof(yn), stdin);
+              if (yn[0] != 'y' && yn[0] != 'Y') {
+                try_again = 0;
+                break;
+              }
+            } else {
+              break;
+            }
+          } while (1);
 
-        printf("Masukkan password: ");
-        fgets(password, sizeof(password), stdin);
-        password[strcspn(password, "\n")] = 0;
+          if (!try_again)
+            break;
 
-        register_user(&user_list, username, password);
+          printf("Masukkan password: ");
+          fgets(password, sizeof(password), stdin);
+          password[strcspn(password, "\n")] = 0;
+
+          if (!register_user(&user_list, username, password)) {
+            printf("Coba lagi? (y/n): ");
+            char yn[8];
+            fgets(yn, sizeof(yn), stdin);
+            if (yn[0] != 'y' && yn[0] != 'Y') {
+              try_again = 0;
+            }
+          } else {
+            try_again = 0;
+          }
+        }
         ui_pause();
         break;
       }
       case 2: {
         char username[MAX_USERNAME + 1], password[100];
-        printf("Masukkan username: ");
-        fgets(username, sizeof(username), stdin);
-        username[strcspn(username, "\n")] = 0;
+        int try_again = 1;
+        while (try_again) {
+          printf("Masukkan username: ");
+          fgets(username, sizeof(username), stdin);
+          username[strcspn(username, "\n")] = 0;
 
-        printf("Masukkan password: ");
-        fgets(password, sizeof(password), stdin);
-        password[strcspn(password, "\n")] = 0;
+          printf("Masukkan password: ");
+          fgets(password, sizeof(password), stdin);
+          password[strcspn(password, "\n")] = 0;
 
-        if (login(user_list, username, password, &logged_user)) {
-          is_logged_in = true;
-          handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
-                           &comment_tree_list, &logged_user);
-        } else {
-          ui_pause();
+          if (login(user_list, username, password, &logged_user)) {
+            is_logged_in = true;
+            handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
+                             &comment_tree_list, &logged_user);
+            try_again = 0;
+          } else {
+            printf("Coba lagi? (y/n): ");
+            char yn[8];
+            fgets(yn, sizeof(yn), stdin);
+            if (yn[0] != 'y' && yn[0] != 'Y') {
+              try_again = 0;
+            }
+          }
         }
         break;
       }
-      case 3:
-        user_tampil_list(user_list.first);
-        ui_pause();
-        break;
       }
     } else {
       printf("Logout berhasil.\n");
@@ -80,9 +111,11 @@ int main() {
   } while (pilihan != 0);
 
   printf("Terima kasih telah menggunakan aplikasi ini.\n");
-
-  save_vote_list(&vote_list, "storage/votes.dat");
-  save_user_list(&user_list, "storage/users.dat");
+  save_board_list(&board_list, "../storage/boards.dat");
+  save_vote_list(&vote_list, "../storage/votes.dat");
+  save_user_list(&user_list, "../storage/users.dat");
+  save_post_list(&post_list, "../storage/posts.dat");
+  save_comment_tree_list(&comment_tree_list, "../storage/comments.dat");
 
   // Deallocate all resources
   user_deallocation(&user_list.first);
