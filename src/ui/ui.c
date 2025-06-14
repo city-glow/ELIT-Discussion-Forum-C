@@ -70,6 +70,7 @@ int ui_show_dashboard(User user) {
   printf("3. Trending Posts\n");
   printf("4. See Boards\n");
   printf("0. Logout\n");
+  printf("9. Exit\n");
   printf("========================================\n");
   printf("Pilihan: ");
 
@@ -342,6 +343,21 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
     } else if (dashboard_choice == 98) {
       handle_post_page(1, post_list, vote_list, *user, user_list, board_list,
                        comment_tree_list);
+    } else if (dashboard_choice == 9) {
+      save_board_list(board_list, "../storage/boards.dat");
+      save_vote_list(vote_list, "../storage/votes.dat");
+      save_user_list(user_list, "../storage/users.dat");
+      save_post_list(post_list, "../storage/posts.dat");
+      save_comment_tree_list(comment_tree_list, "../storage/comments.dat");
+
+      // Deallocate all resources
+      user_deallocation(&user_list->first);
+      board_deallocation(&board_list->first);
+      post_deallocation(&post_list->first);
+      vote_deallocation(&vote_list->first);
+      comment_tree_list_deallocation(&comment_tree_list->first);
+      printf("Exiting...\n");
+      exit(0);
     }
 
   } while (dashboard_choice != 0);

@@ -28,6 +28,26 @@ int main() {
   User logged_user;
   bool is_logged_in = false;
 
+  // Persistent login: try to load login.dat
+  FILE *login_file = fopen("../storage/login.dat", "r");
+  if (login_file) {
+    char saved_username[MAX_USERNAME + 1];
+    if (fgets(saved_username, sizeof(saved_username), login_file)) {
+      saved_username[strcspn(saved_username, "\n")] = 0;
+      UserAddress found = user_search_by_id(user_list.first, -1); // dummy
+      UserAddress curr = user_list.first;
+      while (curr != NULL) {
+        if (strcmp(curr->info.username, saved_username) == 0) {
+          logged_user = curr->info;
+          is_logged_in = true;
+          break;
+        }
+        curr = curr->next;
+      }
+    }
+    fclose(login_file);
+  }
+
   do {
     if (!is_logged_in) {
       pilihan = ui_show_main_menu();
@@ -53,8 +73,7 @@ int main() {
             }
           } while (1);
 
-          if (!try_again)
-            break;
+          if (!try_again) break;
 
           printf("Masukkan password: ");
           fgets(password, sizeof(password), stdin);
@@ -87,6 +106,12 @@ int main() {
           password[strcspn(password, "\n")] = 0;
 
           if (login(user_list, username, password, &logged_user)) {
+            // Save login to file
+            FILE *login_file = fopen("../storage/login.dat", "w");
+            if (login_file) {
+              fprintf(login_file, "%s\n", username);
+              fclose(login_file);
+            }
             is_logged_in = true;
             handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
                              &comment_tree_list, &logged_user);
@@ -100,13 +125,23 @@ int main() {
             }
           }
         }
+        ui_pause();
         break;
       }
+      case 3:
+        user_tampil_list(user_list.first);
+        ui_pause();
+        break;
       }
     } else {
+      // Already logged in (persistent login)
+      handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
+                       &comment_tree_list, &logged_user);
       printf("Logout berhasil.\n");
       is_logged_in = false;
+      remove("../storage/login.dat");
       ui_pause();
+      pilihan = -1; // Force loop to continue and show main menu
     }
   } while (pilihan != 0);
 
