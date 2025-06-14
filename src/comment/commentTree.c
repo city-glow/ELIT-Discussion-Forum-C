@@ -324,7 +324,6 @@ CommentAddress get_preorder(CommentAddress node, int targetIndex,
   if (node == NULL)
     return NULL;
 
-  printf("%d", *current);
   // Check current node
   if (*current == targetIndex)
     return node;

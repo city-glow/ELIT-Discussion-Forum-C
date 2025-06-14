@@ -253,13 +253,13 @@ void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
 
     for (int i = offset; i < offset + 10 && i < total_items; i++) {
       UserAddress found_user =
-          user_search_by_id(user_list.first, items->info.c.user_id);
+          user_search_by_id(user_list.first, items[i].info.c.user_id);
       printf("%d. user[%s]: %s | ", i - offset + 1, found_user->info.username,
              items[i].info.c.content);
       int vote_sum;
       Id my_vote_id;
       bool has_voted;
-      get_vote_result(vote_list, &vote_sum, logged_user.id, items->id,
+      get_vote_result(vote_list, &vote_sum, logged_user.id, items[i].id,
                       VOTE_TARGET_COMMENT, &my_vote_id, &has_voted);
       VoteAddress my_vote = NULL;
       if (has_voted) {
@@ -348,7 +348,8 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
       post_tampil_list(post_list->first);
       ui_pause();
     } else if (dashboard_choice == 98) {
-      handle_post_page(1, post_list, vote_list, *user, user_list, board_list,
+        PostAddress demo = post_list->first;
+      handle_post_page(demo->info.id, post_list, vote_list, *user, user_list, board_list,
                        comment_tree_list);
     } else if (dashboard_choice == 9) {
       save_board_list(board_list, "../storage/boards.dat");
@@ -443,6 +444,7 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
           offset -= 10;
         } else if (choice[0] == '0') {
           exit_comments = 1;
+          ui_clear_screen();
         } else {
           int selected = atoi(choice);
           if (selected > 0 && selected <= 10 &&
@@ -453,6 +455,7 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
           }
         }
       }
+          ui_clear_screen();
       free(top_comments);
     }
   } while (menu_choice != 0 && menu_choice != 4);
@@ -596,7 +599,10 @@ void handle_comment_selection(Item selected_item, UserList *user_list,
         }
       }
     } while (choice != 0);
+    ui_clear_screen();
     // Add interaction options (vote, reply, etc.)
     // Implement based on user input handling
   }
+
+  ui_clear_screen();
 }
