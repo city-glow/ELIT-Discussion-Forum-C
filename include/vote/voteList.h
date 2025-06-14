@@ -27,5 +27,7 @@ void vote_delete_by_id(VoteAddress *p, Id nilai, Vote *X);
 void vote_deallocation(VoteAddress *p);
 int vote_count(VoteAddress p);
 VoteAddress vote_balik_list(VoteAddress p);
+void save_vote_list(VoteList *list, const char *filename);
+void load_vote_list(VoteList *list, const char *filename);
 
 #endif

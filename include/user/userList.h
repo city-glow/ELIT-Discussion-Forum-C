@@ -25,5 +25,7 @@ void user_delete_by_id(UserAddress *p, Id nilai, User *X);
 void user_deallocation(UserAddress *p);
 int user_count(UserAddress p);
 UserAddress user_balik_list(UserAddress p);
+void save_user_list(UserList *list, const char *filename);
+void load_user_list(UserList *list, const char *filename);
 
 #endif

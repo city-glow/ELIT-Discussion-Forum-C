@@ -195,4 +195,45 @@ VoteAddress vote_balik_list(VoteAddress p) {
   }
   return p;
 }
+
+
+void save_vote_list(VoteList *list, const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) return;
+
+    // Save id_max
+    fwrite(&(list->id_max), sizeof(Id), 1, file);
+
+    // Save votes
+    VoteAddress current = list->first;
+    while (current != NULL) {
+        fwrite(&(current->info), sizeof(Vote), 1, file);
+        current = current->next;
+    }
+
+    fclose(file);
+}
+
+void load_vote_list(VoteList *list, const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        perror("Failed to open vote file for writing");
+        return;
+    }
+
+    vote_create_list(list);
+
+    // Load id_max
+    fread(&(list->id_max), sizeof(Id), 1, file);
+
+    Vote temp_vote;
+    while (fread(&temp_vote, sizeof(Vote), 1, file) == 1) {
+        VoteAddress new_node;
+        vote_create_node(&new_node);
+        vote_isi_node(&new_node, temp_vote);
+        vote_insert_akhir(&(list->first), new_node);
+    }
+
+    fclose(file);
+}
 #endif

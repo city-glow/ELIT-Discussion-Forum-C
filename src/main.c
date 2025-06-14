@@ -8,6 +8,7 @@
 #include "../include/post/postList.h"
 #include "../include/ui/ui.h"
 #include "../include/user/userList.h"
+#include "../include/vote/voteList.h"
 #include "../include/comment/commentTreeList.h"
 
 int main() {
@@ -17,11 +18,11 @@ int main() {
   VoteList vote_list;
   CommentTreeList comment_tree_list;
 
-  user_create_list(&user_list);
   board_create_list(&board_list);
   post_create_list(&post_list);
-  vote_create_list(&vote_list);
   comment_tree_list_create_list(&comment_tree_list);
+  load_user_list(&user_list, "./storage/users.dat");
+  load_vote_list(&vote_list, "./storage/votes.dat");
 
   int pilihan;
   User logged_user;
@@ -79,6 +80,9 @@ int main() {
   } while (pilihan != 0);
 
   printf("Terima kasih telah menggunakan aplikasi ini.\n");
+
+  save_vote_list(&vote_list, "storage/votes.dat");
+  save_user_list(&user_list, "storage/users.dat");
 
   // Deallocate all resources
   user_deallocation(&user_list.first);

@@ -163,4 +163,44 @@ UserAddress user_balik_list(UserAddress p) {
   }
   return p;
 }
+
+
+void save_user_list(UserList *list, const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) {
+        printf("Failed to open %s for writing\n", filename);
+        return;
+    }
+    fwrite(&(list->id_max), sizeof(Id), 1, file);
+    int count = 0;
+    UserAddress current = list->first;
+    while (current != NULL) {
+        fwrite(&(current->info), sizeof(User), 1, file);
+        current = current->next;
+        count++;
+    }
+    // printf("Saved %d users to %s\n", count, filename);
+    fclose(file);
+}
+
+void load_user_list(UserList *list, const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        printf("Failed to open %s for reading\n", filename);
+        return;
+    }
+    user_create_list(list);
+    fread(&(list->id_max), sizeof(Id), 1, file);
+    int count = 0;
+    User temp_user;
+    while (fread(&temp_user, sizeof(User), 1, file) == 1) {
+        UserAddress new_node;
+        user_create_node(&new_node);
+        user_isi_node(&new_node, temp_user);
+        user_insert_akhir(&(list->first), new_node);
+        count++;
+    }
+
+    fclose(file);
+}
 #endif
