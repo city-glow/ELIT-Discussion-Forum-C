@@ -59,8 +59,7 @@ int ui_show_main_menu() {
 
   int choice;
   scanf("%d", &choice);
-  while (getchar() != '\n')
-    ; // flush input buffer
+  getchar(); // flush input buffer
   return choice;
 }
 
@@ -81,8 +80,7 @@ int ui_show_dashboard(User user) {
   int choice;
   scanf("%d", &choice);
 
-  while (getchar() != '\n')
-    ; // flush input buffer
+  getchar(); // flush input buffer
 
   return choice;
 }
@@ -423,6 +421,10 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
       new_comment_node = (CommentAddress)malloc(sizeof(CommentElmtList));
       new_comment_node->info = wa;
       new_comment_node->info.content = strdup(wa.content);
+      new_comment_node->first_child = NULL;
+      new_comment_node->next_sibling = NULL;
+      new_comment_node->parent = NULL;
+      free(wa.content);
 
       comment_tree_list_insert(comment_tree_list, new_comment_node);
     }

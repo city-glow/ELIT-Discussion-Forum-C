@@ -2,6 +2,7 @@
 #define ITEMARRAY_C
 #include "../../include/array/itemArray.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 int compare_vote_sum(const void *a, const void *b) {
   return ((Item *)b)->vote_sum - ((Item *)a)->vote_sum;
@@ -22,6 +23,7 @@ int get_comment_vote_sum(VoteList vote_list, Id comment_id) {
 
 Item *generate_top_comments_array(CommentTreeList comment_list,
                                   VoteList vote_list, int *count) {
+                                    printf("in generate top comments array rn");
   int size = comment_tree_list_count(comment_list.first);
   Item *items = (Item *)malloc(size * sizeof(Item));
   *count = 0;
