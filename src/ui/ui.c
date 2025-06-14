@@ -59,7 +59,8 @@ int ui_show_main_menu() {
 
   int choice;
   scanf("%d", &choice);
-  getchar();
+  while (getchar() != '\n')
+    ; // flush input buffer
   return choice;
 }
 
@@ -79,7 +80,10 @@ int ui_show_dashboard(User user) {
 
   int choice;
   scanf("%d", &choice);
-  getchar(); // Bersihkan newline
+
+  while (getchar() != '\n')
+    ; // flush input buffer
+
   return choice;
 }
 
@@ -457,8 +461,9 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
     UserAddress poster =
         user_search_by_id(user_list->first, this_post->info.user_id);
     if (this_post->info.user_id == poster->info.id) {
-        Post X;
-        post_delete_by_id(&(post_list->first), this_post->info.id, &X, vote_list, comment_tree_list);
+      Post X;
+      post_delete_by_id(&(post_list->first), this_post->info.id, &X, vote_list,
+                        comment_tree_list);
     }
   }
 }

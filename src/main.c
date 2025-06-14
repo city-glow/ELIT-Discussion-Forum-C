@@ -73,7 +73,8 @@ int main() {
             }
           } while (1);
 
-          if (!try_again) break;
+          if (!try_again)
+            break;
 
           printf("Masukkan password: ");
           fgets(password, sizeof(password), stdin);
@@ -113,8 +114,6 @@ int main() {
               fclose(login_file);
             }
             is_logged_in = true;
-            handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
-                             &comment_tree_list, &logged_user);
             try_again = 0;
           } else {
             printf("Coba lagi? (y/n): ");
@@ -125,13 +124,8 @@ int main() {
             }
           }
         }
-        ui_pause();
-        break;
+
       }
-      case 3:
-        user_tampil_list(user_list.first);
-        ui_pause();
-        break;
       }
     } else {
       // Already logged in (persistent login)
