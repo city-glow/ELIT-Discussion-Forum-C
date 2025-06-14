@@ -20,6 +20,7 @@ void comment_tree_list_create_node(CommentTreeAddress *p) {
         perror("malloc failed");
         exit(1);
     }
+  (*p)->next = NULL;
 }
 
 void comment_tree_list_isi_node(CommentTreeAddress *p, CommentTree nilai) {
