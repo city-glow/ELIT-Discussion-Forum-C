@@ -22,33 +22,47 @@ int get_vote_sum(VoteList vote_list, Id comment_id,
   return sum;
 }
 
-bool word_loose_match(const char *haystack, const char *needle) {
-  if (!haystack || !needle)
-    return false;
+bool word_exact_case_insensitive_match(const char *word1, const char *word2) {
+  if (!word1 || !word2) return false;
+  return strcasecmp(word1, word2) == 0;
+}
 
-  // Case-insensitive substring match
-  return (strcasestr(haystack, needle) != NULL);
+bool text_contains_word(const char *text, const char *search_word) {
+  if (!text || !search_word) return false;
+
+  char buffer[1024];
+  strncpy(buffer, text, sizeof(buffer));
+  buffer[sizeof(buffer) - 1] = '\0';
+
+  char *token = strtok(buffer, " ");
+  while (token != NULL) {
+    if (word_exact_case_insensitive_match(token, search_word)) {
+      return true;
+    }
+    token = strtok(NULL, " ");
+  }
+
+  return false;
 }
 
 bool post_matches_search(Post post, const char *search_term) {
   if (!search_term || strlen(search_term) == 0)
     return true;
 
-  // Break search term into words (e.g., "algo sort" becomes ["algo", "sort"])
   char buffer[256];
   strncpy(buffer, search_term, sizeof(buffer));
   buffer[sizeof(buffer) - 1] = '\0';
 
   char *token = strtok(buffer, " ");
   while (token != NULL) {
-    if (word_loose_match(post.title, token) ||
-        word_loose_match(post.content, token)) {
-      return true; // Any match is enough
+    if (text_contains_word(post.title, token) ||
+        text_contains_word(post.content, token)) {
+      return true; // match on a full word
     }
     token = strtok(NULL, " ");
   }
 
-  return false; // None matched
+  return false;
 }
 
 Item *generate_top_comments_array(CommentTreeList comment_list,
