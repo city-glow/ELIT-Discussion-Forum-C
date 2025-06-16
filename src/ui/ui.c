@@ -13,6 +13,7 @@
 #include "../../include/post/postList.h"
 #include "../../include/vote/vote.h"
 #include "../../include/vote/voteList.h"
+#include "../../include/ui/navigationStack.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -459,22 +460,23 @@ int ui_show_single_comment(Comment comment, bool has_parent,
 // =======================
 void handle_dashboard(BoardList *board_list, PostList *post_list,
                       UserList *user_list, VoteList *vote_list,
-                      CommentTreeList *comment_tree_list, const User *user) {
+                      CommentTreeList *comment_tree_list, const User *user,
+                      NavigationStack *nav_stack) {
+  navigation_stack_push(nav_stack, "dashboard"); // Push halaman ini ke stack
+
   int dashboard_choice;
   do {
     dashboard_choice = ui_show_dashboard(*user);
 
-    if (dashboard_choice == 1) { // Create new post
+    if (dashboard_choice == 1) {
+      // Buat post
       char board_title[MAX_TITLE + 1];
-
       printf("Masukkan nama board tempat anda ingin post (maksimal 100): ");
       fgets(board_title, sizeof(board_title), stdin);
       board_title[strcspn(board_title, "\n")] = 0;
 
       int board_id = get_or_create_board(board_list, board_title, user->id);
-      if (board_id == -1) {
-        continue;
-      }
+      if (board_id == -1) continue;
 
       Post *new_post = create_post_input(board_id, user->id);
       if (new_post) {
@@ -485,39 +487,39 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
         free(new_post->content);
         free(new_post);
       }
+
     } else if (dashboard_choice == 3) {
+      navigation_stack_push(nav_stack, "trending");
       handle_posts_page(post_list, vote_list, *user, user_list, board_list,
                         comment_tree_list, -1, -1);
 
     } else if (dashboard_choice == 4) {
+      navigation_stack_push(nav_stack, "boards");
       handle_boards_page(post_list, vote_list, *user, user_list, board_list,
                          comment_tree_list, -1);
-    } else if (dashboard_choice == 99) {
-      post_tampil_list(post_list->first);
-      ui_pause();
-    } else if (dashboard_choice == 98) {
-      PostAddress demo = post_list->first;
-      handle_post_page(demo->info.id, post_list, vote_list, *user, user_list,
-                       board_list, comment_tree_list);
+
     } else if (dashboard_choice == 9) {
+      navigation_stack_save(nav_stack); // Simpan stack sebelum exit
       save_board_list(board_list, "../storage/boards.dat");
       save_vote_list(vote_list, "../storage/votes.dat");
       save_user_list(user_list, "../storage/users.dat");
       save_post_list(post_list, "../storage/posts.dat");
       save_comment_tree_list(comment_tree_list, "../storage/comments.dat");
 
-      // Deallocate all resources
       user_deallocation(&user_list->first);
       board_deallocation(&board_list->first);
       post_deallocation(&post_list->first);
       vote_deallocation(&vote_list->first);
       comment_tree_list_deallocation(&comment_tree_list->first);
+
       printf("Exiting...\n");
       exit(0);
     }
 
-  } while (dashboard_choice != 0);
+  } while (dashboard_choice != 0); // 0 = logout
+  navigation_stack_save(nav_stack, "../storage/navigation.dat");
 }
+
 
 void handle_boards_page(PostList *post_list, VoteList *vote_list,
                         User logged_user, UserList *user_list,

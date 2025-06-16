@@ -141,6 +141,18 @@ int main() {
             }
             is_logged_in = true;
             try_again = 0;
+            char *last_page = navigation_stack_top(nav_stack);
+            if (last_page != NULL) {
+                // Sementara, arahkan semuanya ke dashboard
+                navigation_stack_push(&nav_stack, "dashboard");
+                handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
+                                &comment_tree_list, &logged_user, &nav_stack);
+            } else {
+                // Kalau belum ada halaman terakhir
+                navigation_stack_push(&nav_stack, "dashboard");
+                handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
+                 &comment_tree_list, &logged_user, &nav_stack);
+            }
           } else {
             printf("Coba lagi? (y/n): ");
             char yn[8];
@@ -155,9 +167,10 @@ int main() {
     } else {
       // Already logged in (persistent login)
       handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
-                       &comment_tree_list, &logged_user);
+                       &comment_tree_list, &logged_user, &nav_stack);
       printf("Logout berhasil.\n");
       is_logged_in = false;
+      navigation_stack_save(&nav_stack, "../storage/navigation.dat");
       remove("../storage/login.dat");
       ui_pause();
       pilihan = -1; // Force loop to continue and show main menu
@@ -177,6 +190,6 @@ int main() {
   post_deallocation(&post_list.first);
   vote_deallocation(&vote_list.first);
   comment_tree_list_deallocation(&comment_tree_list.first);
-
+  navigation_stack_save(&nav_stack, "../storage/navigation.dat");
   return 0;
 }
