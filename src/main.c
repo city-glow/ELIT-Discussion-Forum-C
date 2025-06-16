@@ -170,7 +170,7 @@ int main() {
                        &comment_tree_list, &logged_user, &nav_stack);
       printf("Logout berhasil.\n");
       is_logged_in = false;
-      navigation_stack_save(&nav_stack, "../storage/navigation.dat");
+      save_navigation_stack(nav_stack, "../storage/navigation.dat");
       remove("../storage/login.dat");
       ui_pause();
       pilihan = -1; // Force loop to continue and show main menu
@@ -190,6 +190,6 @@ int main() {
   post_deallocation(&post_list.first);
   vote_deallocation(&vote_list.first);
   comment_tree_list_deallocation(&comment_tree_list.first);
-  navigation_stack_save(&nav_stack, "../storage/navigation.dat");
+  save_navigation_stack(nav_stack, "../storage/navigation.dat");
   return 0;
 }

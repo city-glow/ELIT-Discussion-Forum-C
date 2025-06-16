@@ -499,7 +499,7 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
                          comment_tree_list, -1);
 
     } else if (dashboard_choice == 9) {
-      navigation_stack_save(nav_stack); // Simpan stack sebelum exit
+      save_navigation_stack(*nav_stack, "../storage/nav.dat"); // Simpan stack sebelum exit
       save_board_list(board_list, "../storage/boards.dat");
       save_vote_list(vote_list, "../storage/votes.dat");
       save_user_list(user_list, "../storage/users.dat");
@@ -517,7 +517,7 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
     }
 
   } while (dashboard_choice != 0); // 0 = logout
-  navigation_stack_save(nav_stack, "../storage/navigation.dat");
+  save_navigation_stack(*nav_stack, "../storage/navigation.dat");
 }
 
 

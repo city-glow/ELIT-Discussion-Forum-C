@@ -48,7 +48,6 @@ SRCS = \
 	src/array/item.c \
 	src/array/itemArray.c \
 	src/id/id.c \
-	src/id/idList.c \
 	src/board/moderateThisList.c \
 	src/board/moderateThisQueue.c \
 	src/main.c
