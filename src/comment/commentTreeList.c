@@ -110,7 +110,7 @@ void comment_tree_list_insert(CommentTreeList *p, CommentAddress PNew) {
     comment_tree_list_create_node(&np); // Allocate node for new tree
     create_comment_tree(&np->info);     // Initialize the tree
     np->next = NULL; //THIS FIXES IT LOLLLL
-    
+
 
     // Insert the comment node into the new tree
     if (!create_and_insert_comment_node(&np->info, PNew->info)) {
@@ -216,21 +216,6 @@ void comment_tree_list_delete_by_post_id(CommentTreeAddress *p, Id nilai,
 // #include "../../include/vote/voteList.h"
 // ...
 
-// Helper to traverse and delete votes for all comments in a tree
-static void delete_votes_in_comment_tree(CommentAddress node,
-                                         VoteList *vote_list) {
-  if (!node)
-    return;
-  // Delete all votes for this comment
-  vote_delete_all_by_target(&vote_list->first, node->info.id,
-                            VOTE_TARGET_COMMENT);
-  // Traverse children
-  CommentAddress child = node->first_child;
-  while (child) {
-    delete_votes_in_comment_tree(child, vote_list);
-    child = child->next_sibling;
-  }
-}
 
 void comment_delete_all_post_id_with_votes(CommentTreeAddress *p, Id nilai,
                                            CommentTree *X,
@@ -257,7 +242,7 @@ void comment_delete_all_post_id(CommentTreeAddress *p, Id nilai,
 }
 
 void comment_tree_list_delete_comment_by_id(CommentTreeList *p, Id nilai,
-                                            Comment *X) {
+                                            Comment *X, VoteList *vote_list) {
   if (p == NULL || p->first == NULL)
     return;
 
@@ -271,13 +256,15 @@ void comment_tree_list_delete_comment_by_id(CommentTreeList *p, Id nilai,
         *X = root->info;
       }
 
-      delete_comment_by_id_rec(root, nilai, false);
-      tree->info.root = NULL; // Delete root only, not the whole list
+      delete_comment_by_id_rec(root, nilai, false, vote_list);
+      CommentTree haha;
+      comment_tree_list_delete_by_address(&p->first, tree, &haha);
+      delete_votes_in_comment_tree(tree->info.root, vote_list);
       return;
     }
 
     // Search and delete within the tree
-    if (delete_comment_by_id_rec(tree->info.root, nilai, true)) {
+    if (delete_comment_by_id_rec(tree->info.root, nilai, true, vote_list)) {
       return; // Found and deleted
     }
 

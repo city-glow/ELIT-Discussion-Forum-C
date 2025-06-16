@@ -271,37 +271,69 @@ int comment_tree_get_level_from_comment(CommentTree p, Comment X) {
   return level;
 }
 
+void delete_votes_in_comment_tree(CommentAddress node,
+                                         VoteList *vote_list) {
+  if (!node)
+    return;
+  // Delete all votes for this comment
+  vote_delete_all_by_target(&vote_list->first, node->info.id,
+                            VOTE_TARGET_COMMENT);
+  // Traverse children
+  CommentAddress child = node->first_child;
+  while (child) {
+    delete_votes_in_comment_tree(child, vote_list);
+    child = child->next_sibling;
+  }
+}
+
 // Fungsi rekursif untuk menghapus node dan subtree-nya
-bool delete_comment_by_id_rec(CommentAddress r, Id nilai, bool valid) {
+
+bool delete_comment_by_id_rec(CommentAddress r, Id nilai, bool valid, VoteList *vote_list) {
   if (r == NULL)
     return false;
 
-  if ((r->info.id == nilai) || !valid) {
-    CommentAddress child = r->first_child;
-    while (child != NULL) {
-      CommentAddress next = child->next_sibling;
-      delete_comment_by_id_rec(child, nilai, false);
-      child = next;
+  CommentAddress prev = NULL;
+  CommentAddress curr = r->first_child;
+
+  while (curr != NULL) {
+    if (curr->info.id == nilai || !valid) {
+      // Unlink from sibling list
+      if (prev == NULL) {
+        r->first_child = curr->next_sibling;
+      } else {
+        prev->next_sibling = curr->next_sibling;
+      }
+
+      delete_votes_in_comment_tree(curr, vote_list);
+
+      // Delete children recursively
+      CommentAddress child = curr->first_child;
+      while (child != NULL) {
+        CommentAddress next = child->next_sibling;
+        delete_comment_by_id_rec(child, nilai, false, vote_list);
+        child = next;
+      }
+
+      // Free content and node
+      if (curr->info.content != NULL) {
+        free(curr->info.content);
+      }
+      free(curr);
+
+      return true;
+    } else {
+      if (delete_comment_by_id_rec(curr, nilai, true, vote_list)) {
+        return true;
+      }
     }
 
-    // Bebaskan memori untuk node saat ini
-    if (r->info.content != NULL) {
-      free(r->info.content);
-    }
-    free(r);
-    return true;
-  } else {
-
-    CommentAddress child = r->first_child;
-    while (child != NULL) {
-      CommentAddress next = child->next_sibling;
-      return delete_comment_by_id_rec(child, nilai, true);
-      child = next;
-    }
-    return false;
+    prev = curr;
+    curr = curr->next_sibling;
   }
-  // Hapus semua anak terlebih dahulu
+
+  return false;
 }
+
 
 // CommentAddress get_preorder_helper(CommentAddress node, int targetIndex, int
 // *current) {

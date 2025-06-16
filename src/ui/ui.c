@@ -172,17 +172,19 @@ Post *create_post_input(int board_id, int author_id) {
   fgets(title, sizeof(title), stdin);
   title[strcspn(title, "\n")] = 0;
 
-  printf("Masukkan konten post (maksimal 1024 karakter, akhiri dengan baris berisi ---END---):\n");
+  printf("Masukkan konten post (maksimal 1024 karakter, akhiri dengan baris "
+         "berisi ---END---):\n");
 
-      char line[256];
-      while (fgets(line, sizeof(line), stdin)) {
-          if (strcmp(line, "---END---\n") == 0) break;
-          if (strlen(content) + strlen(line) >= 1024) {
-              fprintf(stderr, "Konten melebihi batas maksimum\n");
-              break;
-          }
-          strcat(content, line);
-      }
+  char line[256];
+  while (fgets(line, sizeof(line), stdin)) {
+    if (strcmp(line, "---END---\n") == 0)
+      break;
+    if (strlen(content) + strlen(line) >= 1024) {
+      fprintf(stderr, "Konten melebihi batas maksimum\n");
+      break;
+    }
+    strcat(content, line);
+  }
 
   strcpy(new_post->title, title);
   new_post->content = strdup(content);
@@ -336,6 +338,12 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
         my_vote = vote_search_by_id(vote_list.first, my_vote_id);
       }
       print_vote(has_voted, my_vote ? my_vote->info : (Vote){0}, vote_sum);
+      if (board_id == -1) {
+        BoardAddress this_board =
+            board_search_by_id(board_list.first, items[i].info.p.board_id);
+        printf(" | in board[%s%s%s]", ANSI_BOLD, this_board->info.title,
+               ANSI_RESET);
+      }
       printf("\n");
     }
   }
@@ -359,6 +367,7 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
   } else {
     printf("Q. Search\n");
   }
+  printf("Z. Make New Post\n");
   printf("0. Kembali\n");
 
   printf("========================================\n");
@@ -405,6 +414,7 @@ void display_top_boards(Item *items, int total_items, int offset,
   } else {
     printf("Q. Search\n");
   }
+  printf("Z. Make New Board\n");
   printf("0. Kembali\n");
 
   printf("========================================\n");
@@ -419,7 +429,7 @@ int ui_show_single_comment(Comment comment, bool has_parent,
   printf("========================================\n");
   printf("-- COMMENT by user[%s]\n", poster.username);
   printf("========================================\n");
-  printf("in post %s%s%s", ANSI_BOLD, post.title, ANSI_RESET);
+  printf("in post %s%s%s\n", ANSI_BOLD, post.title, ANSI_RESET);
   if (has_parent) {
     printf("reply to %suser[%s]: %s%s\n", ANSI_BOLD, parent_commenter_username,
            comment_parent.content, ANSI_RESET);
@@ -480,7 +490,8 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
                         comment_tree_list, -1, -1);
 
     } else if (dashboard_choice == 4) {
-       handle_boards_page(post_list, vote_list, *user, user_list, board_list, comment_tree_list, -1);
+      handle_boards_page(post_list, vote_list, *user, user_list, board_list,
+                         comment_tree_list, -1);
     } else if (dashboard_choice == 99) {
       post_tampil_list(post_list->first);
       ui_pause();
@@ -689,8 +700,7 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
       free(wa.content);
 
       comment_tree_list_insert(comment_tree_list, new_comment_node);
-    }
-    if (menu_choice == 3) {
+    } else if (menu_choice == 3) {
       int total_items, offset = 0;
       Item *top_comments = generate_top_comments_array(
           *comment_tree_list, *vote_list, &total_items, post_id);
@@ -721,6 +731,16 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
       }
       ui_clear_screen();
       free(top_comments);
+    } else if (menu_choice == 4 && logged_user.id == this_post->info.user_id) {
+      printf("Post dan seluruh komentarnya akan dihapus. Apakah anda "
+             "yakin? (y/n): ");
+      char choice_line[8]; // small buffer
+      fgets(choice_line, sizeof(choice_line), stdin);
+
+      if (choice_line[0] != 'y' && choice_line[0] != 'Y') {
+        printf("Penghapusan dibatalkan.\n");
+        menu_choice = -1;
+      }
     }
   } while (menu_choice != 0 && menu_choice != 4);
   if (menu_choice == 4) {
@@ -813,9 +833,34 @@ void handle_single_comment_page(Id comment_id, PostList *post_list,
       new_comment_node->info.content = strdup(wa.content);
 
       comment_tree_list_insert(comment_tree_list, new_comment_node);
+    } else if (menu_choice == 3 &&
+               logged_user.id == this_comment->info.user_id) {
+      printf("Komentar dan seluruh balasannya akan dihapus. Apakah anda "
+             "yakin? (y/n): ");
+      char choice_line[8]; // small buffer
+      fgets(choice_line, sizeof(choice_line), stdin);
+
+      if (choice_line[0] != 'y' && choice_line[0] != 'Y') {
+        printf("Penghapusan dibatalkan.\n");
+        menu_choice = -1;
+      }
     }
     free(parent_commenter_username);
   } while ((menu_choice != 0) && (menu_choice != 3));
+  if (menu_choice == 3) {
+    CommentAddress this_comment =
+        comment_tree_list_search_by_id(comment_tree_list->first, comment_id);
+    if (this_comment->info.user_id == logged_user.id) {
+
+      printf("Menghapus komentar...\n");
+      Comment J;
+      comment_tree_list_delete_comment_by_id(
+          comment_tree_list, this_comment->info.id, &J, vote_list);
+
+      printf("Komentar berhasil dihapus\n");
+      ui_pause();
+    }
+  }
 }
 
 void handle_comment_selection(Item selected_item, UserList *user_list,

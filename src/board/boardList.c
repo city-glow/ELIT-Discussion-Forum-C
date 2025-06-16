@@ -149,6 +149,7 @@ void board_delete_by_address(BoardAddress *p, BoardAddress pDel, Board *X) {
 void board_delete_by_id(BoardAddress *p, Id nilai, Board *X) {
   BoardAddress target = board_search_by_id(*p, nilai);
   board_delete_by_address(p, target, X);
+
 }
 
 void board_deallocation(BoardAddress *p) {

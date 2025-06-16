@@ -32,8 +32,10 @@ int comment_tree_get_level_from_comment(CommentTree p, Comment X);
 int comment_tree_depth(CommentTree P);
 void comment_add_child(CommentAddress p, CommentAddress p_new);
 bool create_and_insert_comment_node(CommentTree *p, Comment k);
-bool delete_comment_by_id_rec(CommentAddress r, Id nilai, bool valid);
+bool delete_comment_by_id_rec(CommentAddress r, Id nilai, bool valid, VoteList *vote_list);
 // CommentAddress get_preorder(CommentAddress root, int n);
 CommentAddress get_preorder(CommentAddress node, int targetIndex, int *current);
+void delete_votes_in_comment_tree(CommentAddress node,
+                                         VoteList *vote_list);
 // int comment_tree_max(infotype Data1, infotype Data2);
 #endif
