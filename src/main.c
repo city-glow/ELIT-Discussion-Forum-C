@@ -55,7 +55,6 @@ int main() {
     char saved_username[MAX_USERNAME + 1];
     if (fgets(saved_username, sizeof(saved_username), login_file)) {
       saved_username[strcspn(saved_username, "\n")] = 0;
-      UserAddress found = user_search_by_id(user_list.first, -1); // dummy
       UserAddress curr = user_list.first;
       while (curr != NULL) {
         if (strcmp(curr->info.username, saved_username) == 0) {

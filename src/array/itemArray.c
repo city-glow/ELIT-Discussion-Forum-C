@@ -23,12 +23,14 @@ int get_vote_sum(VoteList vote_list, Id comment_id,
 }
 
 bool word_exact_case_insensitive_match(const char *word1, const char *word2) {
-  if (!word1 || !word2) return false;
+  if (!word1 || !word2)
+    return false;
   return strcasecmp(word1, word2) == 0;
 }
 
 bool text_contains_word(const char *text, const char *search_word) {
-  if (!text || !search_word) return false;
+  if (!text || !search_word)
+    return false;
 
   char buffer[1024];
   strncpy(buffer, text, sizeof(buffer));
@@ -57,6 +59,25 @@ bool post_matches_search(Post post, const char *search_term) {
   while (token != NULL) {
     if (text_contains_word(post.title, token) ||
         text_contains_word(post.content, token)) {
+      return true; // match on a full word
+    }
+    token = strtok(NULL, " ");
+  }
+
+  return false;
+}
+
+bool board_matches_search(Board board, const char *search_term) {
+  if (!search_term || strlen(search_term) == 0)
+    return true;
+
+  char buffer[256];
+  strncpy(buffer, search_term, sizeof(buffer));
+  buffer[sizeof(buffer) - 1] = '\0';
+
+  char *token = strtok(buffer, " ");
+  while (token != NULL) {
+    if (text_contains_word(board.title, token)) {
       return true; // match on a full word
     }
     token = strtok(NULL, " ");
@@ -122,6 +143,46 @@ Item *generate_top_posts_array(PostList post_list, VoteList vote_list,
   } else {
 
     qsort(items, *count, sizeof(Item), compare_vote_sum);
+  }
+  return items;
+}
+
+int compare_boards_by_title(const void *a, const void *b) {
+  const Item *itemA = (const Item *)a;
+  const Item *itemB = (const Item *)b;
+  return strcmp(itemA->info.b.title, itemB->info.b.title);
+}
+
+Item *generate_top_boards_array(BoardList board_list, int *count,
+                                bool sort_by_new, Id user,
+                                const char *search_term) {
+  int size = board_count(board_list.first);
+  Item *items = (Item *)malloc(size * sizeof(Item));
+  *count = 0;
+  BoardAddress current = board_list.first;
+  while (current != NULL) {
+    Board board = current->info;
+    bool user_match = (user == -1 || board.owner_id == user);
+    bool search_match = board_matches_search(board, search_term);
+
+    if (user_match && search_match) {
+      items[*count].info.b = board;
+      items[*count].type = ITEM_TYPE_BOARD;
+      items[*count].id = board.id;
+      (*count)++;
+    }
+
+    current = current->next;
+  }
+
+  if (sort_by_new) {
+    for (int i = 0; i < *count / 2; i++) {
+      Item temp = items[i];
+      items[i] = items[*count - 1 - i];
+      items[*count - 1 - i] = temp;
+    }
+  } else {
+    qsort(items, *count, sizeof(Item), compare_boards_by_title);
   }
   return items;
 }

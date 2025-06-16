@@ -166,14 +166,23 @@ Post *create_post_input(int board_id, int author_id) {
 
   char title[MAX_TITLE + 1];
   char content[1025];
+  content[0] = '\0';
 
   printf("Masukkan judul post (maksimal 100 karakter): ");
   fgets(title, sizeof(title), stdin);
   title[strcspn(title, "\n")] = 0;
 
-  printf("Masukkan konten post (maksimal 1024 karakter):\n");
-  fgets(content, sizeof(content), stdin);
-  content[strcspn(content, "\n")] = 0;
+  printf("Masukkan konten post (maksimal 1024 karakter, akhiri dengan baris berisi ---END---):\n");
+
+      char line[256];
+      while (fgets(line, sizeof(line), stdin)) {
+          if (strcmp(line, "---END---\n") == 0) break;
+          if (strlen(content) + strlen(line) >= 1024) {
+              fprintf(stderr, "Konten melebihi batas maksimum\n");
+              break;
+          }
+          strcat(content, line);
+      }
 
   strcpy(new_post->title, title);
   new_post->content = strdup(content);
@@ -346,9 +355,55 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
     printf("M. Only my posts\n");
   }
   if (search) {
-     printf("Q. Delete search query\n");
+    printf("Q. Delete search query\n");
   } else {
-     printf("Q. Search\n");
+    printf("Q. Search\n");
+  }
+  printf("0. Kembali\n");
+
+  printf("========================================\n");
+  printf("Pilih nomor atau navigasi: ");
+}
+
+void display_top_boards(Item *items, int total_items, int offset,
+                        bool sort_by_new, Id user_id, bool search) {
+  ui_clear_screen();
+  printf("========================================\n");
+  if (sort_by_new) {
+    printf("-- New Boards\n");
+  } else {
+    printf("-- Boards by Name\n");
+  }
+  printf("========================================\n");
+  if (total_items == 0) {
+    printf("No boards found...\n");
+  } else {
+
+    for (int i = offset; i < offset + 10 && i < total_items; i++) {
+      printf("%d. board[%s%s%s]", i - offset + 1, ANSI_BOLD,
+             items[i].info.b.title, ANSI_RESET);
+      printf("\n");
+    }
+  }
+  printf("\nNavigasi:\n");
+  if (offset > 0)
+    printf("P. Previous Page\n");
+  if (offset + 10 < total_items)
+    printf("N. Next Page\n");
+  if (sort_by_new) {
+    printf("S. Sort by name\n");
+  } else {
+    printf("S. Sort by new\n");
+  }
+  if (user_id != -1) {
+    printf("M. Every boards (not only mine)\n");
+  } else {
+    printf("M. Only my boards\n");
+  }
+  if (search) {
+    printf("Q. Delete search query\n");
+  } else {
+    printf("Q. Search\n");
   }
   printf("0. Kembali\n");
 
@@ -358,13 +413,13 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
 
 int ui_show_single_comment(Comment comment, bool has_parent,
                            Comment comment_parent, Post post, User poster,
-                           Board board, int vote_sum, bool has_voted,
-                           Vote my_vote, char *parent_commenter_username,
-                           User logged_user) {
+                           int vote_sum, bool has_voted, Vote my_vote,
+                           char *parent_commenter_username, User logged_user) {
   ui_clear_screen();
   printf("========================================\n");
   printf("-- COMMENT by user[%s]\n", poster.username);
   printf("========================================\n");
+  printf("in post %s%s%s", ANSI_BOLD, post.title, ANSI_RESET);
   if (has_parent) {
     printf("reply to %suser[%s]: %s%s\n", ANSI_BOLD, parent_commenter_username,
            comment_parent.content, ANSI_RESET);
@@ -423,6 +478,9 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
     } else if (dashboard_choice == 3) {
       handle_posts_page(post_list, vote_list, *user, user_list, board_list,
                         comment_tree_list, -1, -1);
+
+    } else if (dashboard_choice == 4) {
+       handle_boards_page(post_list, vote_list, *user, user_list, board_list, comment_tree_list, -1);
     } else if (dashboard_choice == 99) {
       post_tampil_list(post_list->first);
       ui_pause();
@@ -448,6 +506,66 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
     }
 
   } while (dashboard_choice != 0);
+}
+
+void handle_boards_page(PostList *post_list, VoteList *vote_list,
+                        User logged_user, UserList *user_list,
+                        BoardList *board_list,
+                        CommentTreeList *comment_tree_list, Id user_id) {
+  int total_items, offset = 0;
+  bool sort_by_new = false;
+  char *search_term = "";
+  int exit_boards = 0;
+  while (!exit_boards) {
+    bool search = false;
+    if (strcmp(search_term, "") != 0)
+      search = true;
+    Item *top_boards = generate_top_boards_array(
+        *board_list, &total_items, sort_by_new, user_id, search_term);
+    ui_clear_screen();
+    display_top_boards(top_boards, total_items, offset, sort_by_new, user_id,
+                       search);
+    char choice[10];
+    fgets(choice, sizeof(choice), stdin);
+    choice[strcspn(choice, "\n")] = 0;
+    if (choice[0] == 'N' && offset + 10 < total_items) {
+      offset += 10;
+    } else if (choice[0] == 'P' && offset > 0) {
+      offset -= 10;
+    } else if (choice[0] == '0') {
+      exit_boards = 1;
+      ui_clear_screen();
+    } else if (choice[0] == 'S') {
+      sort_by_new = !sort_by_new;
+    } else if (choice[0] == 'M') {
+      if (user_id == -1) {
+        user_id = logged_user.id;
+      } else {
+        user_id = -1;
+      }
+    } else if (choice[0] == 'Q') {
+      if (strcmp(search_term, "") == 0) {
+
+        char content[1025];
+        printf("Masukkan search (maksimal 1024 karakter):\n");
+        fgets(content, sizeof(content), stdin);
+        content[strcspn(content, "\n")] = 0;
+
+        search_term = strdup(content);
+      } else {
+        search_term = strdup("");
+      }
+    } else {
+      int selected = atoi(choice);
+      if (selected > 0 && selected <= 10 && offset + selected <= total_items) {
+        handle_posts_page(post_list, vote_list, logged_user, user_list,
+                          board_list, comment_tree_list,
+                          top_boards[offset + selected - 1].id, -1);
+      }
+    }
+    free(top_boards);
+  }
+  ui_clear_screen();
 }
 
 void handle_posts_page(PostList *post_list, VoteList *vote_list,
@@ -492,7 +610,7 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
       if (strcmp(search_term, "") == 0) {
 
         char content[1025];
-        printf("Masukkan konten reply (maksimal 1024 karakter):\n");
+        printf("Masukkan search (maksimal 1024 karakter):\n");
         fgets(content, sizeof(content), stdin);
         content[strcspn(content, "\n")] = 0;
 
@@ -597,7 +715,7 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
               offset + selected <= total_items) {
             handle_comment_selection(top_comments[offset + selected - 1],
                                      user_list, comment_tree_list, vote_list,
-                                     post_list, board_list, logged_user);
+                                     post_list, logged_user);
           }
         }
       }
@@ -621,7 +739,7 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
 
 void handle_single_comment_page(Id comment_id, PostList *post_list,
                                 VoteList *vote_list, User logged_user,
-                                UserList *user_list, BoardList *board_list,
+                                UserList *user_list,
                                 CommentTreeList *comment_tree_list) {
   int menu_choice;
   do {
@@ -635,8 +753,6 @@ void handle_single_comment_page(Id comment_id, PostList *post_list,
         post_search_by_id(post_list->first, this_comment->info.post_id);
     UserAddress poster =
         user_search_by_id(user_list->first, this_comment->info.user_id);
-    BoardAddress board =
-        board_search_by_id(board_list->first, this_post->info.board_id);
     int vote_sum;
     Id my_vote_id;
     bool has_voted;
@@ -662,7 +778,7 @@ void handle_single_comment_page(Id comment_id, PostList *post_list,
     menu_choice = ui_show_single_comment(
         this_comment->info, has_parent,
         this_comment_parent ? this_comment_parent->info : (Comment){0},
-        this_post->info, poster->info, board->info, vote_sum, has_voted,
+        this_post->info, poster->info, vote_sum, has_voted,
         my_vote ? my_vote->info : (Vote){0}, parent_commenter_username,
         logged_user);
     if (menu_choice == 1) {
@@ -705,7 +821,7 @@ void handle_single_comment_page(Id comment_id, PostList *post_list,
 void handle_comment_selection(Item selected_item, UserList *user_list,
                               CommentTreeList *comment_list,
                               VoteList *vote_list, PostList *post_list,
-                              BoardList *board_list, User logged_user) {
+                              User logged_user) {
   CommentTreeAddress comment_tree = comment_tree_list_search_by_root_id(
       comment_list->first, selected_item.id);
   if (comment_tree != NULL) {
@@ -714,7 +830,7 @@ void handle_comment_selection(Item selected_item, UserList *user_list,
       original_node_count = comment_tree_node_count(comment_tree->info);
 
       handle_single_comment_page(comment_tree->info.root->info.id, post_list,
-                                 vote_list, logged_user, user_list, board_list,
+                                 vote_list, logged_user, user_list,
                                  comment_list);
 
       if (comment_tree_node_count(comment_tree->info) == original_node_count) {
@@ -742,8 +858,7 @@ void handle_comment_selection(Item selected_item, UserList *user_list,
             get_preorder(comment_tree->info.root, choice, &index);
         if (get) {
           handle_single_comment_page(get->info.id, post_list, vote_list,
-                                     logged_user, user_list, board_list,
-                                     comment_list);
+                                     logged_user, user_list, comment_list);
         }
       }
     } while (choice != 0);
