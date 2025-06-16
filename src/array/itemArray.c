@@ -52,19 +52,21 @@ bool post_matches_search(Post post, const char *search_term) {
 }
 
 Item *generate_top_comments_array(CommentTreeList comment_list,
-                                  VoteList vote_list, int *count) {
+                                  VoteList vote_list, int *count, Id post_id) {
   int size = comment_tree_list_count(comment_list.first);
   Item *items = (Item *)malloc(size * sizeof(Item));
   *count = 0;
   CommentTreeAddress current = comment_list.first;
   while (current != NULL) {
     if (current->info.root != NULL) {
-      items[*count].info.c = current->info.root->info;
-      items[*count].type = ITEM_TYPE_COMMENT;
-      items[*count].id = current->info.root->info.id;
-      items[*count].vote_sum =
-          get_vote_sum(vote_list, items[*count].id, VOTE_TARGET_COMMENT);
-      (*count)++;
+      if (current->info.post_id == post_id) {
+        items[*count].info.c = current->info.root->info;
+        items[*count].type = ITEM_TYPE_COMMENT;
+        items[*count].id = current->info.root->info.id;
+        items[*count].vote_sum =
+            get_vote_sum(vote_list, items[*count].id, VOTE_TARGET_COMMENT);
+        (*count)++;
+      }
     }
     current = current->next;
   }

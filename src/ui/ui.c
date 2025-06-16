@@ -242,7 +242,8 @@ int ui_show_post(Post post, User poster, Board board, int vote_sum,
 }
 
 void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
-                          int total_items, int offset, User logged_user) {
+                          int total_items, int offset, User logged_user,
+                          CommentTreeList comment_tree_list) {
   ui_clear_screen();
   printf("========================================\n");
   printf("-- Top Comments\n");
@@ -266,7 +267,12 @@ void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
         my_vote = vote_search_by_id(vote_list.first, my_vote_id);
       }
       print_vote(has_voted, my_vote ? my_vote->info : (Vote){0}, vote_sum);
-      printf("\n");
+      int reply_count =
+          comment_tree_node_count(comment_tree_list_search_by_root_id(
+                                      comment_tree_list.first, items[i].id)
+                                      ->info) - 1;
+
+      printf(" | %d %s \n", reply_count, reply_count <= 1 ? "reply": "replies");
     }
   }
   printf("\nNavigasi:\n");
@@ -302,7 +308,7 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
   }
   printf("========================================\n");
   if (total_items == 0) {
-    printf("No comments yet...\n");
+    printf("No posts found...\n");
   } else {
 
     for (int i = offset; i < offset + 10 && i < total_items; i++) {
@@ -410,7 +416,8 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
         free(new_post);
       }
     } else if (dashboard_choice == 3) {
-        handle_posts_page(post_list, vote_list, *user, user_list, board_list, comment_tree_list, -1, -1);
+      handle_posts_page(post_list, vote_list, *user, user_list, board_list,
+                        comment_tree_list, -1, -1);
     } else if (dashboard_choice == 99) {
       post_tampil_list(post_list->first);
       ui_pause();
@@ -544,12 +551,12 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
     if (menu_choice == 3) {
       int total_items, offset = 0;
       Item *top_comments = generate_top_comments_array(
-          *comment_tree_list, *vote_list, &total_items);
+          *comment_tree_list, *vote_list, &total_items, post_id);
       int exit_comments = 0;
       while (!exit_comments) {
         ui_clear_screen();
         display_top_comments(top_comments, *user_list, *vote_list, total_items,
-                             offset, logged_user);
+                             offset, logged_user, *comment_tree_list);
         char choice[10];
         fgets(choice, sizeof(choice), stdin);
         choice[strcspn(choice, "\n")] = 0;
