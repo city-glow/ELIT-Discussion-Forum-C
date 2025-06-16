@@ -268,9 +268,11 @@ void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
       int reply_count =
           comment_tree_node_count(comment_tree_list_search_by_root_id(
                                       comment_tree_list.first, items[i].id)
-                                      ->info) - 1;
+                                      ->info) -
+          1;
 
-      printf(" | %d %s \n", reply_count, reply_count <= 1 ? "reply": "replies");
+      printf(" | %d %s \n", reply_count,
+             reply_count <= 1 ? "reply" : "replies");
     }
   }
   printf("\nNavigasi:\n");
@@ -287,7 +289,7 @@ void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
 void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
                        BoardList board_list, int total_items, int offset,
                        User logged_user, bool sort_by_new, Id user_id,
-                       Id board_id) {
+                       Id board_id, bool search) {
   ui_clear_screen();
   printf("========================================\n");
   if (board_id == -1) {
@@ -342,6 +344,11 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
     printf("M. Every posts (not only mine)\n");
   } else {
     printf("M. Only my posts\n");
+  }
+  if (search) {
+     printf("Q. Delete search query\n");
+  } else {
+     printf("Q. Search\n");
   }
   printf("0. Kembali\n");
 
@@ -453,13 +460,16 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
   char *search_term = "";
   int exit_posts = 0;
   while (!exit_posts) {
+    bool search = false;
+    if (strcmp(search_term, "") != 0)
+      search = true;
     Item *top_posts =
         generate_top_posts_array(*post_list, *vote_list, &total_items, board_id,
                                  sort_by_new, user_id, search_term);
     ui_clear_screen();
     display_top_posts(top_posts, *user_list, *vote_list, *board_list,
                       total_items, offset, logged_user, sort_by_new, user_id,
-                      board_id);
+                      board_id, search);
     char choice[10];
     fgets(choice, sizeof(choice), stdin);
     choice[strcspn(choice, "\n")] = 0;
@@ -477,6 +487,18 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
         user_id = logged_user.id;
       } else {
         user_id = -1;
+      }
+    } else if (choice[0] == 'Q') {
+      if (strcmp(search_term, "") == 0) {
+
+        char content[1025];
+        printf("Masukkan konten reply (maksimal 1024 karakter):\n");
+        fgets(content, sizeof(content), stdin);
+        content[strcspn(content, "\n")] = 0;
+
+        search_term = strdup(content);
+      } else {
+        search_term = strdup("");
       }
     } else {
       int selected = atoi(choice);

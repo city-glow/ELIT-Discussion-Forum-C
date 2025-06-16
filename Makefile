@@ -68,7 +68,6 @@ $(BUILD_DIR):
 
 # Linking
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/$@ $(OBJS) $(LIBS) -lpthread
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/$@ $(OBJS) $(LIBS)
 
 # Compilation
