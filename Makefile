@@ -35,6 +35,7 @@ SRCS = \
 	src/user/userList.c \
 	src/auth/auth.c \
 	src/ui/ui.c \
+	src/ui/navigationStack.c \
 	src/board/board.c \
 	src/board/boardList.c \
 	src/post/post.c \

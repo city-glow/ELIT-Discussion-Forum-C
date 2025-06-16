@@ -10,6 +10,7 @@
 #include "../include/ui/ui.h"
 #include "../include/user/userList.h"
 #include "../include/vote/voteList.h"
+#include "../include/ui/navigationStack.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -36,6 +37,11 @@ int main() {
   PostList post_list;
   VoteList vote_list;
   CommentTreeList comment_tree_list;
+  NavigationStack nav_stack;
+  navigation_stack_create(&nav_stack);
+  load_navigation_stack(&nav_stack, "../storage/navigation.dat");
+
+
 
   // comment_tree_list_create_list(&comment_tree_list);
 
