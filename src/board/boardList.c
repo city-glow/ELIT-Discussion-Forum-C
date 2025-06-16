@@ -1,6 +1,7 @@
 #ifndef BOARDLIST_C
 #define BOARDLIST_C
 #include "../../include/board/boardList.h"
+#include "../../include/moderateThis/moderateThisQueue.h"
 #include <stddef.h> // For NULL
 #include <stdio.h>
 #include <stdlib.h>
@@ -192,36 +193,35 @@ bool get_board_by_id(BoardList p, Id nilai, Board *get) {
   return !board_is_empty(found);
 }
 
-// Helper to save an IdList
-static void save_idlist(FILE *file, const IdList *list) {
+// Helper to save a ModerateQueue
+static void save_moderate_queue(FILE *file, const ModerateQueue *queue) {
+    ModerateQueueAddress curr = queue->front;
     int count = 0;
-    IdAddress curr = list->first;
     // Count elements
     while (curr) {
         count++;
-        curr = curr->nextId;
+        curr = curr->next;
     }
     fwrite(&count, sizeof(int), 1, file);
-    curr = list->first;
+    curr = queue->front;
     while (curr) {
-        fwrite(&(curr->info), sizeof(Id), 1, file);
-        curr = curr->nextId;
+        fwrite(&(curr->info.request_id), sizeof(Id), 1, file);
+        curr = curr->next;
     }
 }
 
-// Helper to load an IdList
-static void load_idlist(FILE *file, IdList *list) {
+// Helper to load a ModerateQueue
+static void load_moderate_queue(FILE *file, ModerateQueue *queue) {
     int count = 0;
     fread(&count, sizeof(int), 1, file);
-    list->first = NULL;
+    moderate_queue_create(queue);
     for (int i = 0; i < count; ++i) {
-        Id id;
-        fread(&id, sizeof(Id), 1, file);
-        // Add to IdList (prepend is fine for queue semantics)
-        IdAddress newNode = (IdAddress)malloc(sizeof(IdElmtList));
-        newNode->info = id;
-        newNode->nextId = list->first;
-        list->first = newNode;
+        Id request_id;
+        fread(&request_id, sizeof(Id), 1, file);
+        ModerateRequest request;
+        request.request_id = request_id;
+        // Other fields can be initialized as needed or loaded if stored
+        moderate_queue_enqueue(queue, request);
     }
 }
 
@@ -239,7 +239,7 @@ bool save_board_list(const BoardList *boardList, const char *filename) {
         fwrite(&(curr->info.id), sizeof(Id), 1, file);
         fwrite(&(curr->info.owner_id), sizeof(Id), 1, file);
         fwrite(curr->info.title, sizeof(char), MAX_TITLE + 1, file);
-        save_idlist(file, &(curr->info.queue));
+        save_moderate_queue(file, &(curr->info.queue));
         curr = curr->next;
     }
     fclose(file);
@@ -258,7 +258,7 @@ bool load_board_list(BoardList *boardList, const char *filename) {
         fread(&(temp.id), sizeof(Id), 1, file);
         fread(&(temp.owner_id), sizeof(Id), 1, file);
         fread(temp.title, sizeof(char), MAX_TITLE + 1, file);
-        load_idlist(file, &(temp.queue));
+        load_moderate_queue(file, &(temp.queue));
         BoardAddress newNode;
         board_create_node(&newNode);
         board_isi_node(&newNode, temp);

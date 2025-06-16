@@ -1,13 +1,13 @@
 #ifndef BOARD_H
 #define BOARD_H
-#include "../id/idList.h"
+#include "../moderateThis/moderateThisQueue.h"
 #include "../moderateThis/moderateThisList.h"
 #define MAX_TITLE 100
 
 typedef struct {
   Id id;
   Id owner_id;
-  IdList queue;
+  ModerateQueue queue;
   char title[MAX_TITLE + 1];
 } Board;
 
