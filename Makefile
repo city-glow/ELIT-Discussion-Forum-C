@@ -5,7 +5,7 @@ CC = gcc
 # Detect OS
 ifeq ($(OS),Windows_NT)
     CFLAGS = -Wall -Wextra -g -Iinclude/argon2
-	LIBS = -Llibs/ -largon2
+	LIBS = -Llibs/ -largon2 -pthread
     DEL = cmd /C del /F /Q
     SEP = \\
 else
@@ -69,6 +69,11 @@ $(BUILD_DIR):
 # Linking
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/$@ $(OBJS) $(LIBS)
+ifeq ($(OS),Windows_NT)
+	@copy libs\libargon2.dll $(BIN_DIR)\libargon2.dll >nul
+endif
+
+
 
 # Compilation
 $(BUILD_DIR)/%.o: %.c
