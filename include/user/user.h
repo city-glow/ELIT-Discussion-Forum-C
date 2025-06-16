@@ -1,6 +1,7 @@
 #ifndef USER_H
 #define USER_H
-#include "../id/idList.h"
+#include "../id/id.h"
+#include "../moderateThis/moderateThisQueue.h"
 //#include "../notif/notifStack.h"
 #define MAX_USERNAME 100
 
