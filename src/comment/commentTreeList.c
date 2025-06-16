@@ -16,6 +16,11 @@ void comment_tree_list_create_list(CommentTreeList *p) {
 
 void comment_tree_list_create_node(CommentTreeAddress *p) {
   *p = (CommentTreeAddress)malloc(sizeof(CommentTreeElmtList));
+  if (*p == NULL) {
+        perror("malloc failed");
+        exit(1);
+    }
+  (*p)->next = NULL;
 }
 
 void comment_tree_list_isi_node(CommentTreeAddress *p, CommentTree nilai) {
@@ -43,11 +48,16 @@ void comment_tree_list_insert_awal(CommentTreeAddress *p,
 
 void comment_tree_list_insert_akhir(CommentTreeAddress *p,
                                     CommentTreeAddress PNew) {
+
+if (p == NULL || PNew == NULL) {
+        fprintf(stderr, "FATAL: insert_akhir got null pointer\n");
+        return;
+    }
   if (comment_tree_list_is_empty(*p)) {
     *p = PNew;
   } else {
     CommentTreeAddress temp = *p;
-    while (!comment_tree_list_is_empty((*temp).next)) {
+    while (temp->next != NULL) {
       temp = (*temp).next;
     }
     (*temp).next = PNew;
@@ -99,6 +109,8 @@ void comment_tree_list_insert(CommentTreeList *p, CommentAddress PNew) {
     CommentTreeAddress np;
     comment_tree_list_create_node(&np); // Allocate node for new tree
     create_comment_tree(&np->info);     // Initialize the tree
+    np->next = NULL; //THIS FIXES IT LOLLLL
+    
 
     // Insert the comment node into the new tree
     if (!create_and_insert_comment_node(&np->info, PNew->info)) {
@@ -122,6 +134,9 @@ void comment_tree_list_insert(CommentTreeList *p, CommentAddress PNew) {
 
     // Optional: Handle case when parent ID is not found in any tree
     if (!inserted) {
+      printf("node not inserted");
+      printf("enter to contnieu");
+      getchar();
       // You could log a warning or handle the orphaned comment here
     }
   }
@@ -281,7 +296,7 @@ int comment_tree_list_count(CommentTreeAddress p) {
   if (comment_tree_list_is_empty(p)) {
     return 0;
   } else {
-    return 1 + comment_tree_list_count((*p).next);
+    return 1 + comment_tree_list_count(p->next);
   }
 }
 
@@ -310,8 +325,6 @@ CommentTreeAddress comment_tree_list_balik_list(CommentTreeAddress p) {
 //   }
 //   return !comment_tree_list_is_empty(found);
 // }
-
-#endif
 
 // =====================
 // Save/Load Functions
@@ -452,3 +465,4 @@ void load_comment_tree_list(CommentTreeList *list, const char *filename) {
   }
   fclose(file);
 }
+#endif

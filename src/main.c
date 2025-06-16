@@ -37,6 +37,8 @@ int main() {
   VoteList vote_list;
   CommentTreeList comment_tree_list;
 
+  // comment_tree_list_create_list(&comment_tree_list);
+
   load_comment_tree_list(&comment_tree_list, "../storage/comments.dat");
   load_user_list(&user_list, "../storage/users.dat");
   load_vote_list(&vote_list, "../storage/votes.dat");
