@@ -5,7 +5,7 @@ CC = gcc
 # Detect OS
 ifeq ($(OS),Windows_NT)
     CFLAGS = -Wall -Wextra -g -Iinclude/argon2
-	LIBS = -Llibs/ -largon2 -pthread
+	LIBS = 
     DEL = cmd /C del /F /Q
     SEP = \\
 else
@@ -50,6 +50,12 @@ SRCS = \
 	src/id/id.c \
 	src/board/moderateThisList.c \
 	src/board/moderateThisQueue.c \
+	src/argon2/argon2.c \
+	src/argon2/core.c \
+	src/argon2/encoding.c \
+	src/argon2/blake2/blake2b.c \
+	src/argon2/thread.c \
+	src/argon2/ref.c \
 	src/main.c
 
 # Object files
