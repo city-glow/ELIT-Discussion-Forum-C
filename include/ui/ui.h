@@ -35,5 +35,10 @@ void handle_comment_selection(Item selected_item, UserList *user_list,
                               CommentTreeList *comment_list,
                               VoteList *vote_list, PostList *post_list,
                               BoardList *board_list, User logged_user);
+void handle_posts_page(PostList *post_list, VoteList *vote_list,
+                       User logged_user, UserList *user_list,
+                       BoardList *board_list,
+                       CommentTreeList *comment_tree_list, Id board_id,
+                       Id user_id);
 
 #endif

@@ -2,22 +2,53 @@
 #define ITEMARRAY_C
 #include "../../include/array/itemArray.h"
 #include <stdlib.h>
+#include <string.h>
 
 int compare_vote_sum(const void *a, const void *b) {
   return ((Item *)b)->vote_sum - ((Item *)a)->vote_sum;
 }
 
-int get_comment_vote_sum(VoteList vote_list, Id comment_id) {
+int get_vote_sum(VoteList vote_list, Id comment_id,
+                 VoteTargetType target_type) {
   int sum = 0;
   VoteAddress current = vote_list.first;
   while (current != NULL) {
     if (current->info.target_id == comment_id &&
-        current->info.target_type == VOTE_TARGET_COMMENT) {
+        current->info.target_type == target_type) {
       sum += current->info.is_upvote ? 1 : -1;
     }
     current = current->next;
   }
   return sum;
+}
+
+bool word_loose_match(const char *haystack, const char *needle) {
+  if (!haystack || !needle)
+    return false;
+
+  // Case-insensitive substring match
+  return (strcasestr(haystack, needle) != NULL);
+}
+
+bool post_matches_search(Post post, const char *search_term) {
+  if (!search_term || strlen(search_term) == 0)
+    return true;
+
+  // Break search term into words (e.g., "algo sort" becomes ["algo", "sort"])
+  char buffer[256];
+  strncpy(buffer, search_term, sizeof(buffer));
+  buffer[sizeof(buffer) - 1] = '\0';
+
+  char *token = strtok(buffer, " ");
+  while (token != NULL) {
+    if (word_loose_match(post.title, token) ||
+        word_loose_match(post.content, token)) {
+      return true; // Any match is enough
+    }
+    token = strtok(NULL, " ");
+  }
+
+  return false; // None matched
 }
 
 Item *generate_top_comments_array(CommentTreeList comment_list,
@@ -32,7 +63,7 @@ Item *generate_top_comments_array(CommentTreeList comment_list,
       items[*count].type = ITEM_TYPE_COMMENT;
       items[*count].id = current->info.root->info.id;
       items[*count].vote_sum =
-          get_comment_vote_sum(vote_list, items[*count].id);
+          get_vote_sum(vote_list, items[*count].id, VOTE_TARGET_COMMENT);
       (*count)++;
     }
     current = current->next;
@@ -42,36 +73,40 @@ Item *generate_top_comments_array(CommentTreeList comment_list,
 }
 
 Item *generate_top_posts_array(PostList post_list, VoteList vote_list,
-                               int *count, Id board) {
+                               int *count, Id board, bool sort_by_new, Id user,
+                               const char *search_term) {
   int size = post_count(post_list.first);
   Item *items = (Item *)malloc(size * sizeof(Item));
   *count = 0;
   PostAddress current = post_list.first;
-  if (board == -1) {
+  while (current != NULL) {
+    Post post = current->info;
+    bool board_match = (board == -1 || post.board_id == board);
+    bool user_match = (user == -1 || post.user_id == user);
+    bool search_match = post_matches_search(post, search_term);
 
-    while (current != NULL) {
-      items[*count].info.p = current->info;
+    if (board_match && user_match && search_match) {
+      items[*count].info.p = post;
       items[*count].type = ITEM_TYPE_POST;
-      items[*count].id = current->info.id;
+      items[*count].id = post.id;
       items[*count].vote_sum =
-          get_comment_vote_sum(vote_list, items[*count].id);
+          get_vote_sum(vote_list, post.id, VOTE_TARGET_POST);
       (*count)++;
-      current = current->next;
+    }
+
+    current = current->next;
+  }
+
+  if (sort_by_new) {
+    for (int i = 0; i < *count / 2; i++) {
+      Item temp = items[i];
+      items[i] = items[*count - 1 - i];
+      items[*count - 1 - i] = temp;
     }
   } else {
-    while (current != NULL) {
-      if (current->info.board_id == board) {
-        items[*count].info.p = current->info;
-        items[*count].type = ITEM_TYPE_POST;
-        items[*count].id = current->info.id;
-        items[*count].vote_sum =
-            get_comment_vote_sum(vote_list, items[*count].id);
-        (*count)++;
-        current = current->next;
-      }
-    }
+
+    qsort(items, *count, sizeof(Item), compare_vote_sum);
   }
-  qsort(items, *count, sizeof(Item), compare_vote_sum);
   return items;
 }
 

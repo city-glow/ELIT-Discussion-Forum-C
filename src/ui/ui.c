@@ -67,7 +67,7 @@ int ui_show_main_menu() {
 int ui_show_dashboard(User user) {
   ui_clear_screen();
   printf("========================================\n");
-  printf("--- Selamat datang, %s!--\n", user.username);
+  printf("--- Selamat datang, %s!\n", user.username);
   printf("========================================\n");
   printf("1. Add Post\n");
   printf("2. See Profile\n");
@@ -280,6 +280,71 @@ void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
   printf("Pilih nomor atau navigasi: ");
 }
 
+void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
+                       BoardList board_list, int total_items, int offset,
+                       User logged_user, bool sort_by_new, Id user_id,
+                       Id board_id) {
+  ui_clear_screen();
+  printf("========================================\n");
+  if (board_id == -1) {
+    if (sort_by_new) {
+      printf("-- New Posts\n");
+    } else {
+      printf("-- Trending Posts\n");
+    }
+  } else {
+    BoardAddress this_board = board_search_by_id(board_list.first, board_id);
+    if (sort_by_new) {
+      printf("-- New Posts in board[%s]\n", this_board->info.title);
+    } else {
+      printf("-- Trending Posts in board[%s]\n", this_board->info.title);
+    }
+  }
+  printf("========================================\n");
+  if (total_items == 0) {
+    printf("No comments yet...\n");
+  } else {
+
+    for (int i = offset; i < offset + 10 && i < total_items; i++) {
+      UserAddress found_user =
+          user_search_by_id(user_list.first, items[i].info.p.user_id);
+      printf("%d. user[%s]: %s%s%s | ", i - offset + 1,
+             found_user->info.username, ANSI_BOLD, items[i].info.p.title,
+             ANSI_RESET);
+      int vote_sum;
+      Id my_vote_id;
+      bool has_voted;
+      get_vote_result(vote_list, &vote_sum, logged_user.id, items[i].id,
+                      VOTE_TARGET_POST, &my_vote_id, &has_voted);
+      VoteAddress my_vote = NULL;
+      if (has_voted) {
+        my_vote = vote_search_by_id(vote_list.first, my_vote_id);
+      }
+      print_vote(has_voted, my_vote ? my_vote->info : (Vote){0}, vote_sum);
+      printf("\n");
+    }
+  }
+  printf("\nNavigasi:\n");
+  if (offset > 0)
+    printf("P. Previous Page\n");
+  if (offset + 10 < total_items)
+    printf("N. Next Page\n");
+  if (sort_by_new) {
+    printf("S. Sort by vote\n");
+  } else {
+    printf("S. Sort by new\n");
+  }
+  if (user_id != -1) {
+    printf("M. Every posts (not only mine)\n");
+  } else {
+    printf("M. Only my posts\n");
+  }
+  printf("0. Kembali\n");
+
+  printf("========================================\n");
+  printf("Pilih nomor atau navigasi: ");
+}
+
 int ui_show_single_comment(Comment comment, bool has_parent,
                            Comment comment_parent, Post post, User poster,
                            Board board, int vote_sum, bool has_voted,
@@ -344,13 +409,15 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
         free(new_post->content);
         free(new_post);
       }
+    } else if (dashboard_choice == 3) {
+        handle_posts_page(post_list, vote_list, *user, user_list, board_list, comment_tree_list, -1, -1);
     } else if (dashboard_choice == 99) {
       post_tampil_list(post_list->first);
       ui_pause();
     } else if (dashboard_choice == 98) {
-        PostAddress demo = post_list->first;
-      handle_post_page(demo->info.id, post_list, vote_list, *user, user_list, board_list,
-                       comment_tree_list);
+      PostAddress demo = post_list->first;
+      handle_post_page(demo->info.id, post_list, vote_list, *user, user_list,
+                       board_list, comment_tree_list);
     } else if (dashboard_choice == 9) {
       save_board_list(board_list, "../storage/boards.dat");
       save_vote_list(vote_list, "../storage/votes.dat");
@@ -369,6 +436,54 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
     }
 
   } while (dashboard_choice != 0);
+}
+
+void handle_posts_page(PostList *post_list, VoteList *vote_list,
+                       User logged_user, UserList *user_list,
+                       BoardList *board_list,
+                       CommentTreeList *comment_tree_list, Id board_id,
+                       Id user_id) {
+  int total_items, offset = 0;
+  bool sort_by_new = false;
+  char *search_term = "";
+  int exit_posts = 0;
+  while (!exit_posts) {
+    Item *top_posts =
+        generate_top_posts_array(*post_list, *vote_list, &total_items, board_id,
+                                 sort_by_new, user_id, search_term);
+    ui_clear_screen();
+    display_top_posts(top_posts, *user_list, *vote_list, *board_list,
+                      total_items, offset, logged_user, sort_by_new, user_id,
+                      board_id);
+    char choice[10];
+    fgets(choice, sizeof(choice), stdin);
+    choice[strcspn(choice, "\n")] = 0;
+    if (choice[0] == 'N' && offset + 10 < total_items) {
+      offset += 10;
+    } else if (choice[0] == 'P' && offset > 0) {
+      offset -= 10;
+    } else if (choice[0] == '0') {
+      exit_posts = 1;
+      ui_clear_screen();
+    } else if (choice[0] == 'S') {
+      sort_by_new = !sort_by_new;
+    } else if (choice[0] == 'M') {
+      if (user_id == -1) {
+        user_id = logged_user.id;
+      } else {
+        user_id = -1;
+      }
+    } else {
+      int selected = atoi(choice);
+      if (selected > 0 && selected <= 10 && offset + selected <= total_items) {
+        handle_post_page(top_posts[offset + selected - 1].id, post_list,
+                         vote_list, logged_user, user_list, board_list,
+                         comment_tree_list);
+      }
+    }
+    free(top_posts);
+  }
+  ui_clear_screen();
 }
 
 void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
@@ -455,7 +570,7 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
           }
         }
       }
-          ui_clear_screen();
+      ui_clear_screen();
       free(top_comments);
     }
   } while (menu_choice != 0 && menu_choice != 4);
@@ -467,6 +582,8 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
       Post X;
       post_delete_by_id(&(post_list->first), this_post->info.id, &X, vote_list,
                         comment_tree_list);
+      printf("Post deleted successfully...\n");
+      ui_pause();
     }
   }
 }
