@@ -716,6 +716,20 @@ void handle_boards_page(PostList *post_list, VoteList *vote_list,
     ui_clear_screen();
     display_top_boards(top_boards, total_items, offset, sort_by_new, user_id,
                        search);
+    if (total_items == 0) {
+      printf("\nBoard ini kosong. Silakan tekan 0 untuk kembali.\n");
+      printf("Pilihan: ");
+      char choice[10];
+      fgets(choice, sizeof(choice), stdin);
+      choice[strcspn(choice, "\n")] = 0;
+      if (strcmp(choice, "0") == 0) {
+        exit_boards = 1;
+        ui_clear_screen();
+      }
+      free(top_boards);
+      continue;
+    }
+
     char choice[10];
     fgets(choice, sizeof(choice), stdin);
     choice[strcspn(choice, "\n")] = 0;
@@ -782,12 +796,24 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
     if (strcmp(search_term, "") != 0)
       search = true;
     Item *top_posts =
-        generate_top_posts_array(*post_list, *vote_list, &total_items, board_id,
-                                 sort_by_new, user_id, search_term);
+    generate_top_posts_array(*post_list, *vote_list, &total_items, board_id,sort_by_new, user_id, search_term);
     ui_clear_screen();
     display_top_posts(top_posts, *user_list, *vote_list, *board_list,
-                      total_items, offset, logged_user, sort_by_new, user_id,
-                      board_id, search);
+                      total_items, offset, logged_user, sort_by_new, user_id,board_id, search);
+    if (total_items == 0) {
+    printf("\nPost ini kosong. Silakan tekan 0 untuk kembali.\n");
+    printf("Pilihan: ");
+    char choice[10];
+    fgets(choice, sizeof(choice), stdin);
+    choice[strcspn(choice, "\n")] = 0;
+    if (strcmp(choice, "0") == 0) {
+      exit_posts = 1;
+      ui_clear_screen();
+    }
+    free(top_posts);
+    continue;
+    }
+
     char choice[10];
     fgets(choice, sizeof(choice), stdin);
     choice[strcspn(choice, "\n")] = 0;
@@ -985,6 +1011,20 @@ void handle_top_comments_page(PostList *post_list, VoteList *vote_list,
     display_top_comments(top_comments, *user_list, *vote_list, total_items,
                          offset, logged_user, *comment_tree_list, search_bool,
                          sort_by_new, user_id);
+    if (total_items == 0) {
+      printf("\nKomentar ini kosong. Silakan tekan 0 untuk kembali.\n");
+      printf("Pilihan: ");
+      char choice[10];
+      fgets(choice, sizeof(choice), stdin);
+      choice[strcspn(choice, "\n")] = 0;
+      if (strcmp(choice, "0") == 0) {
+        exit_comments = 1;
+        ui_clear_screen();
+      }
+      free(top_comments);
+      continue;
+    }
+
     char choice[10];
     fgets(choice, sizeof(choice), stdin);
     choice[strcspn(choice, "\n")] = 0;
