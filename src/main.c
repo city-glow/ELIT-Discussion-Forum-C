@@ -159,7 +159,7 @@ int main() {
     } else {
       // Already logged in (persistent login)
       handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
-                       &comment_tree_list, &logged_user, &nav_stack);
+                 &comment_tree_list, &logged_user, &nav_stack);
       printf("Logout berhasil.\n");
       is_logged_in = false;
       save_navigation_stack(nav_stack, "../storage/navigation.dat");

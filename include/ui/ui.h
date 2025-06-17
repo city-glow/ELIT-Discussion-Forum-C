@@ -59,9 +59,12 @@ void resume_last_navigation(NavigationStack *nav_stack, User *logged_user,
                             UserList *user_list, VoteList *vote_list,
                             CommentTreeList *comment_tree_list);
 
-void handle_profile(User user, PostList *post_list,
-                    CommentTreeList *comment_tree_list,
-                    BoardList *board_list, NavigationStack *nav_stack);
+void handle_profile(User user,
+                    PostList *post_list,
+                    VoteList *vote_list,
+                    UserList *user_list,
+                    BoardList *board_list,
+                    CommentTreeList *comment_tree_list,NavigationStack *nav_stack);
 
-
+                    
 #endif

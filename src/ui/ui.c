@@ -616,15 +616,18 @@ void handle_moderate_queue(BoardList *board_list, PostList *post_list, User logg
   ui_pause();
 }
 
-void handle_dashboard(BoardList *board_list, PostList *post_list,
-                      UserList *user_list, VoteList *vote_list,
-                      CommentTreeList *comment_tree_list, const User *user,
+void handle_dashboard(BoardList *board_list,
+                      PostList *post_list,
+                      UserList *user_list,
+                      VoteList *vote_list,
+                      CommentTreeList *comment_tree_list,
+                      User *logged_user,
                       NavigationStack *nav_stack) {
   navigation_stack_push(nav_stack, "dashboard"); // Push halaman ini ke stack
 
   int dashboard_choice;
   do {
-    dashboard_choice = ui_show_dashboard(*user);
+    dashboard_choice = ui_show_dashboard(*logged_user);
 
     if (dashboard_choice == 1) {
       // Buat post
@@ -633,11 +636,11 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
       fgets(board_title, sizeof(board_title), stdin);
       board_title[strcspn(board_title, "\n")] = 0;
 
-      int board_id = get_or_create_board(board_list, board_title, user->id);
+      int board_id = get_or_create_board(board_list, board_title, logged_user->id);
       if (board_id == -1)
         continue;
 
-      Post *new_post = create_post_input(board_id, user->id);
+      Post *new_post = create_post_input(board_id, logged_user->id);
       if (new_post) {
         PostAddress post_node;
         post_create_node(&post_node);
@@ -649,23 +652,23 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
 
     } else if (dashboard_choice == 2) {
       navigation_stack_push(nav_stack, "moderate_queue");
-      handle_moderate_queue(board_list, post_list, *user);
+      handle_moderate_queue(board_list, post_list, *logged_user);
 
     } else if (dashboard_choice == 3) {
       // See Profile
       // TODO: Implement profile handling here
       //printf("Profile page is under construction.\n");
-      handle_profile(*user, post_list, comment_tree_list, board_list, nav_stack);
+      handle_profile(*logged_user, post_list, vote_list,user_list, board_list, comment_tree_list, nav_stack);
       ui_pause();
 
     } else if (dashboard_choice == 4) {
       navigation_stack_push(nav_stack, "trending");
-      handle_posts_page(post_list, vote_list, *user, user_list, board_list,
+      handle_posts_page(post_list, vote_list, *logged_user, user_list, board_list,
                         comment_tree_list, -1, -1);
 
     } else if (dashboard_choice == 5) {
       navigation_stack_push(nav_stack, "boards");
-      handle_boards_page(post_list, vote_list, *user, user_list, board_list,
+      handle_boards_page(post_list, vote_list, *logged_user, user_list, board_list,
                          comment_tree_list, -1);
 
     } else if (dashboard_choice == 0) {
@@ -1203,7 +1206,7 @@ void resume_last_navigation(NavigationStack *nav_stack, User *logged_user,BoardL
     } else if (strcmp(last_page, "boards") == 0) {
       handle_boards_page(post_list, vote_list, *logged_user, user_list,board_list, comment_tree_list, -1);
     } else if (strcmp(last_page, "profile") == 0) {
-      handle_profile(*logged_user, post_list, comment_tree_list, board_list, nav_stack);
+      handle_profile(*logged_user, post_list, vote_list, user_list, board_list, comment_tree_list, nav_stack);
     } else if (strcmp(last_page, "moderate_queue") == 0) {
       handle_moderate_queue(board_list, post_list, *logged_user);
     } else if (strcmp(last_page, "post") == 0) {
@@ -1226,8 +1229,13 @@ void resume_last_navigation(NavigationStack *nav_stack, User *logged_user,BoardL
   }
 }
 
-void handle_profile(User user, PostList *post_list, CommentTreeList *comment_tree_list,
-                    BoardList *board_list, NavigationStack *nav_stack) {
+void handle_profile(User user,
+                    PostList *post_list,
+                    VoteList *vote_list,
+                    UserList *user_list,
+                    BoardList *board_list,
+                    CommentTreeList *comment_tree_list,
+                    NavigationStack *nav_stack) {
   navigation_stack_push(nav_stack, "profile");
 
   int total_post = 0, total_comment = 0, total_board = 0;
@@ -1245,10 +1253,10 @@ void handle_profile(User user, PostList *post_list, CommentTreeList *comment_tre
   while (ctree != NULL) {
     CommentAddress curr_comment = ctree->info.root;
     if (curr_comment != NULL && curr_comment->info.user_id == user.id)
-      total_comment++; // Root
+      total_comment++;
 
-    // Traversal child node
-    CommentAddress stack[100]; int top = 0;
+    CommentAddress stack[100];
+    int top = 0;
     if (curr_comment) stack[top++] = curr_comment;
 
     while (top > 0) {
@@ -1294,21 +1302,19 @@ void handle_profile(User user, PostList *post_list, CommentTreeList *comment_tre
 
     switch (choice) {
     case 1:
-      handle_posts_page(post_list, NULL, user, NULL, NULL, comment_tree_list, -1, user.id);
+      handle_posts_page(post_list, vote_list, user, user_list, board_list, comment_tree_list, -1, user.id);
       break;
     case 2:
-      handle_top_comments_page(post_list, NULL, user, NULL, comment_tree_list, user.id, -1);
+      handle_top_comments_page(post_list, vote_list, user, user_list, comment_tree_list, user.id, -1);
       break;
     case 3:
-      handle_boards_page(post_list, NULL, user, NULL, board_list, comment_tree_list, user.id);
+      handle_boards_page(post_list, vote_list, user, user_list, board_list, comment_tree_list, user.id);
       break;
     }
   } while (choice != 0);
 
   ui_clear_screen();
 }
-
-
 
 void handle_comment_selection(Item selected_item, UserList *user_list,
                               CommentTreeList *comment_list,
