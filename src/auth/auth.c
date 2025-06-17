@@ -1,5 +1,5 @@
 #include "../../include/auth/auth.h"
-#include <argon2.h>  // Argon2 library
+#include "../../include/argon2/argon2.h"  // Argon2 library
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +10,8 @@
 void generate_salt(char *salt, size_t length) {
     const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     srand((unsigned int)time(NULL));
-    for (size_t i = 0; i < length; ++i) {
+    size_t i = 0;
+    for (i = 0; i < length; ++i) {
         salt[i] = charset[rand() % (sizeof(charset) - 1)];
     }
 }
@@ -37,8 +38,8 @@ bool is_username_valid(char *username, UserList list) {
         printf("Username tidak boleh kosong!!\n");
         return false;
     }
-
-    for (int i = 0; username[i] != '\0'; i++) {
+	int i = 0;
+    for (i = 0; username[i] != '\0'; i++) {
         if (username[i] == ' ') {
             printf("Username tidak boleh ada spasi!\n");
             return false;

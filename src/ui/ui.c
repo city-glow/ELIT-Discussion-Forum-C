@@ -264,8 +264,8 @@ void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
   if (total_items == 0) {
     printf("No comments yet...\n");
   } else {
-
-    for (int i = offset; i < offset + 10 && i < total_items; i++) {
+	int i = offset;
+    for (i = offset; i < offset + 10 && i < total_items; i++) {
       UserAddress found_user =
           user_search_by_id(user_list.first, items[i].info.c.user_id);
       printf("%d. user[%s]: %s | ", i - offset + 1, found_user->info.username,
@@ -340,8 +340,8 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
   if (total_items == 0) {
     printf("No posts found...\n");
   } else {
-
-    for (int i = offset; i < offset + 10 && i < total_items; i++) {
+int i = offset;
+    for (i = offset; i < offset + 10 && i < total_items; i++) {
       UserAddress found_user =
           user_search_by_id(user_list.first, items[i].info.p.user_id);
       printf("%d. user[%s]: %s%s%s | ", i - offset + 1,
@@ -412,8 +412,8 @@ void display_top_boards(Item *items, int total_items, int offset,
   if (total_items == 0) {
     printf("No boards found...\n");
   } else {
-
-    for (int i = offset; i < offset + 10 && i < total_items; i++) {
+	int i = offset;
+    for (i = offset; i < offset + 10 && i < total_items; i++) {
       printf("%d. board[%s%s%s]", i - offset + 1, ANSI_BOLD,
              items[i].info.b.title, ANSI_RESET);
       printf("\n");

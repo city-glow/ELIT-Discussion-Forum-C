@@ -97,7 +97,8 @@ void comment_tree_print_tree_rec(CommentAddress r, int *level,
       }
       ancestor = ancestor->parent;
     }
-    for (int i = ancestorCount - 1; i >= 0; i--) {
+    int i = ancestorCount - 1;
+    for (i = ancestorCount - 1; i >= 0; i--) {
       printf("%s", hasSibling[i] ? "│  " : "   ");
     }
   }

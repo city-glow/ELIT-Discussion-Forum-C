@@ -415,7 +415,8 @@ static CommentAddress load_comment_node(FILE *file) {
   fread(&child_count, sizeof(int), 1, file);
 
   CommentAddress prev_child = NULL;
-  for (int i = 0; i < child_count; ++i) {
+  int i = 0;
+  for (i = 0; i < child_count; ++i) {
     CommentAddress child = load_comment_node(file);
     child->parent = node;
     if (!node->first_child) {
@@ -439,8 +440,8 @@ void load_comment_tree_list(CommentTreeList *list, const char *filename) {
   fread(&(list->id_max), sizeof(Id), 1, file);
   int tree_count = 0;
   fread(&tree_count, sizeof(int), 1, file);
-
-  for (int i = 0; i < tree_count; ++i) {
+	int i = 0;
+  for (i = 0; i < tree_count; ++i) {
     CommentTree temp_tree;
     fread(&(temp_tree.post_id), sizeof(Id), 1, file);
     int has_root = 0;

@@ -164,7 +164,8 @@ Item *generate_top_posts_array(PostList post_list, VoteList vote_list,
   }
 
   if (sort_by_new) {
-    for (int i = 0; i < *count / 2; i++) {
+  	int i = 0;
+    for (i; i < *count / 2; i++) {
       Item temp = items[i];
       items[i] = items[*count - 1 - i];
       items[*count - 1 - i] = temp;
@@ -205,7 +206,8 @@ Item *generate_top_boards_array(BoardList board_list, int *count,
   }
 
   if (sort_by_new) {
-    for (int i = 0; i < *count / 2; i++) {
+  	int i = 0;
+    for (i = 0; i < *count / 2; i++) {
       Item temp = items[i];
       items[i] = items[*count - 1 - i];
       items[*count - 1 - i] = temp;

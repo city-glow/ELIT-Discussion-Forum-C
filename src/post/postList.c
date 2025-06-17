@@ -260,8 +260,8 @@ void load_post_list(PostList *list, const char *filename) {
 
   int count = 0;
   fread(&count, sizeof(int), 1, file);
-
-  for (int i = 0; i < count; ++i) {
+int i = 0;
+  for (i = 0; i < count; ++i) {
     Post temp;
     fread(&(temp.id), sizeof(Id), 1, file);
     fread(&(temp.user_id), sizeof(Id), 1, file);

@@ -1,0 +1,103 @@
+# Project: tubes
+# Makefile created by Dev-C++ 5.11
+
+CPP      = g++.exe
+CC       = gcc.exe
+WINDRES  = windres.exe
+OBJ      = ../src/argon2/argon2.o ../src/argon2/core.o ../src/argon2/encoding.o ../src/argon2/ref.o ../src/argon2/thread.o ../src/argon2/blake2/blake2b.o ../src/array/item.o ../src/array/itemArray.o ../src/auth/auth.o ../src/board/moderateThisQueue.o ../src/board/board.o ../src/board/boardList.o ../src/board/moderateThisList.o ../src/comment/comment.o ../src/comment/commentTree.o ../src/comment/commentTreeList.o ../src/id/id.o ../src/post/post.o ../src/post/postList.o ../src/ui/navigationStack.o ../src/ui/ui.o ../src/user/user.o ../src/user/userList.o ../src/vote/voteList.o ../src/vote/vote.o ../src/main.o
+LINKOBJ  = ../src/argon2/argon2.o ../src/argon2/core.o ../src/argon2/encoding.o ../src/argon2/ref.o ../src/argon2/thread.o ../src/argon2/blake2/blake2b.o ../src/array/item.o ../src/array/itemArray.o ../src/auth/auth.o ../src/board/moderateThisQueue.o ../src/board/board.o ../src/board/boardList.o ../src/board/moderateThisList.o ../src/comment/comment.o ../src/comment/commentTree.o ../src/comment/commentTreeList.o ../src/id/id.o ../src/post/post.o ../src/post/postList.o ../src/ui/navigationStack.o ../src/ui/ui.o ../src/user/user.o ../src/user/userList.o ../src/vote/voteList.o ../src/vote/vote.o ../src/main.o
+LIBS     = -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/lib" -static-libgcc
+INCS     = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include"
+CXXINCS  = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include/c++"
+BIN      = tubes.exe
+CXXFLAGS = $(CXXINCS) 
+CFLAGS   = $(INCS) 
+RM       = rm.exe -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CC) $(LINKOBJ) -o $(BIN) $(LIBS)
+
+../src/argon2/argon2.o: ../src/argon2/argon2.c
+	$(CC) -c ../src/argon2/argon2.c -o ../src/argon2/argon2.o $(CFLAGS)
+
+../src/argon2/core.o: ../src/argon2/core.c
+	$(CC) -c ../src/argon2/core.c -o ../src/argon2/core.o $(CFLAGS)
+
+../src/argon2/encoding.o: ../src/argon2/encoding.c
+	$(CC) -c ../src/argon2/encoding.c -o ../src/argon2/encoding.o $(CFLAGS)
+
+../src/argon2/ref.o: ../src/argon2/ref.c
+	$(CC) -c ../src/argon2/ref.c -o ../src/argon2/ref.o $(CFLAGS)
+
+../src/argon2/thread.o: ../src/argon2/thread.c
+	$(CC) -c ../src/argon2/thread.c -o ../src/argon2/thread.o $(CFLAGS)
+
+../src/argon2/blake2/blake2b.o: ../src/argon2/blake2/blake2b.c
+	$(CC) -c ../src/argon2/blake2/blake2b.c -o ../src/argon2/blake2/blake2b.o $(CFLAGS)
+
+../src/array/item.o: ../src/array/item.c
+	$(CC) -c ../src/array/item.c -o ../src/array/item.o $(CFLAGS)
+
+../src/array/itemArray.o: ../src/array/itemArray.c
+	$(CC) -c ../src/array/itemArray.c -o ../src/array/itemArray.o $(CFLAGS)
+
+../src/auth/auth.o: ../src/auth/auth.c
+	$(CC) -c ../src/auth/auth.c -o ../src/auth/auth.o $(CFLAGS)
+
+../src/board/moderateThisQueue.o: ../src/board/moderateThisQueue.c
+	$(CC) -c ../src/board/moderateThisQueue.c -o ../src/board/moderateThisQueue.o $(CFLAGS)
+
+../src/board/board.o: ../src/board/board.c
+	$(CC) -c ../src/board/board.c -o ../src/board/board.o $(CFLAGS)
+
+../src/board/boardList.o: ../src/board/boardList.c
+	$(CC) -c ../src/board/boardList.c -o ../src/board/boardList.o $(CFLAGS)
+
+../src/board/moderateThisList.o: ../src/board/moderateThisList.c
+	$(CC) -c ../src/board/moderateThisList.c -o ../src/board/moderateThisList.o $(CFLAGS)
+
+../src/comment/comment.o: ../src/comment/comment.c
+	$(CC) -c ../src/comment/comment.c -o ../src/comment/comment.o $(CFLAGS)
+
+../src/comment/commentTree.o: ../src/comment/commentTree.c
+	$(CC) -c ../src/comment/commentTree.c -o ../src/comment/commentTree.o $(CFLAGS)
+
+../src/comment/commentTreeList.o: ../src/comment/commentTreeList.c
+	$(CC) -c ../src/comment/commentTreeList.c -o ../src/comment/commentTreeList.o $(CFLAGS)
+
+../src/id/id.o: ../src/id/id.c
+	$(CC) -c ../src/id/id.c -o ../src/id/id.o $(CFLAGS)
+
+../src/post/post.o: ../src/post/post.c
+	$(CC) -c ../src/post/post.c -o ../src/post/post.o $(CFLAGS)
+
+../src/post/postList.o: ../src/post/postList.c
+	$(CC) -c ../src/post/postList.c -o ../src/post/postList.o $(CFLAGS)
+
+../src/ui/navigationStack.o: ../src/ui/navigationStack.c
+	$(CC) -c ../src/ui/navigationStack.c -o ../src/ui/navigationStack.o $(CFLAGS)
+
+../src/ui/ui.o: ../src/ui/ui.c
+	$(CC) -c ../src/ui/ui.c -o ../src/ui/ui.o $(CFLAGS)
+
+../src/user/user.o: ../src/user/user.c
+	$(CC) -c ../src/user/user.c -o ../src/user/user.o $(CFLAGS)
+
+../src/user/userList.o: ../src/user/userList.c
+	$(CC) -c ../src/user/userList.c -o ../src/user/userList.o $(CFLAGS)
+
+../src/vote/voteList.o: ../src/vote/voteList.c
+	$(CC) -c ../src/vote/voteList.c -o ../src/vote/voteList.o $(CFLAGS)
+
+../src/vote/vote.o: ../src/vote/vote.c
+	$(CC) -c ../src/vote/vote.c -o ../src/vote/vote.o $(CFLAGS)
+
+../src/main.o: ../src/main.c
+	$(CC) -c ../src/main.c -o ../src/main.o $(CFLAGS)

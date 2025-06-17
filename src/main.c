@@ -16,14 +16,14 @@
 #include <windows.h>
 void enable_windows_ansi() {
   system("chcp 65001 > nul"); // Enable UTF-8
-  HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-  if (hOut != INVALID_HANDLE_VALUE) {
-    DWORD dwMode = 0;
-    if (GetConsoleMode(hOut, &dwMode)) {
-      dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-      SetConsoleMode(hOut, dwMode);
-    }
-  }
+  // HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+  // if (hOut != INVALID_HANDLE_VALUE) {
+  //   DWORD dwMode = 0;
+  //   if (GetConsoleMode(hOut, &dwMode)) {
+  //     dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+  //     SetConsoleMode(hOut, dwMode);
+  //   }
+ //  }
 }
 #else
 void enable_windows_ansi() {} // No-op on non-Windows

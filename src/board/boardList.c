@@ -218,7 +218,8 @@ static void load_moderate_queue(FILE *file, ModerateQueue *queue) {
     int count = 0;
     fread(&count, sizeof(int), 1, file);
     moderate_queue_create(queue);
-    for (int i = 0; i < count; ++i) {
+    int i = 0;
+    for (i = 0; i < count; ++i) {
         Id request_id;
         fread(&request_id, sizeof(Id), 1, file);
         ModerateRequest request;
@@ -256,7 +257,8 @@ bool load_board_list(BoardList *boardList, const char *filename) {
     fread(&(boardList->id_max), sizeof(Id), 1, file);
     int count = 0;
     fread(&count, sizeof(int), 1, file);
-    for (int i = 0; i < count; ++i) {
+    int i = 0;
+    for (i = 0; i < count; ++i) {
         Board temp;
         fread(&(temp.id), sizeof(Id), 1, file);
         fread(&(temp.owner_id), sizeof(Id), 1, file);

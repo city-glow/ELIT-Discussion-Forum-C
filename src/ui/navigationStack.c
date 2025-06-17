@@ -70,7 +70,8 @@ void load_navigation_stack(NavigationStack *S, const char *filename) {
     }
 
     // Masukkan ke stack dari bawah ke atas
-    for (int i = count - 1; i >= 0; i--) {
+    int i = count - 1;
+    for (i = count - 1; i >= 0; i--) {
         navigation_stack_push(S, pages[i]);
     }
 
