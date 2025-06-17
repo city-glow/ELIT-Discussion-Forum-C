@@ -647,8 +647,9 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
       }
 
     } else if (dashboard_choice == 2) {
-      navigation_stack_push(nav_stack, "moderate_queue");
-      handle_moderate_queue(board_list, post_list, *user);
+      //navigation_stack_push(nav_stack, "moderate_queue");
+      //handle_moderate_queue(board_list, post_list, *user);
+      handle_profile(*user, post_list, comment_tree_list, board_list, nav_stack);
 
     } else if (dashboard_choice == 3) {
       // See Profile
@@ -1160,6 +1161,19 @@ void resume_last_navigation(NavigationStack *nav_stack, User *logged_user,BoardL
       handle_posts_page(post_list, vote_list, *logged_user, user_list,board_list, comment_tree_list, -1, -1);
     } else if (strcmp(last_page, "boards") == 0) {
       handle_boards_page(post_list, vote_list, *logged_user, user_list,board_list, comment_tree_list, -1);
+    } else if (strcmp(last_page, "profile") == 0) {
+      handle_profile(*logged_user, post_list, comment_tree_list, board_list, nav_stack);
+    } else if (strcmp(last_page, "moderate_queue") == 0) {
+      handle_moderate_queue(board_list, post_list, *logged_user);
+    } else if (strcmp(last_page, "post") == 0) {
+      // Handle post page
+      Id post_id = navigation_stack_get_last_post_id(nav_stack);
+      handle_post_page(post_id, post_list, vote_list, *logged_user, user_list, board_list, comment_tree_list);
+    } else if (strcmp(last_page, "comment") == 0) {
+      // Handle comment page
+      Id comment_id = navigation_stack_get_last_comment_id(nav_stack);
+      handle_single_comment_page(comment_id, post_list, vote_list, *logged_user, user_list, comment_tree_list);
+
     } else {
       // Fallback
       navigation_stack_push(nav_stack, "dashboard");
@@ -1170,6 +1184,89 @@ void resume_last_navigation(NavigationStack *nav_stack, User *logged_user,BoardL
     handle_dashboard(board_list, post_list, user_list, vote_list,comment_tree_list, logged_user, nav_stack);
   }
 }
+
+void handle_profile(User user, PostList *post_list, CommentTreeList *comment_tree_list,
+                    BoardList *board_list, NavigationStack *nav_stack) {
+  navigation_stack_push(nav_stack, "profile");
+
+  int total_post = 0, total_comment = 0, total_board = 0;
+
+  // Hitung total post
+  PostAddress pcurr = post_list->first;
+  while (pcurr != NULL) {
+    if (pcurr->info.user_id == user.id)
+      total_post++;
+    pcurr = pcurr->next;
+  }
+
+  // Hitung total comment
+  CommentTreeAddress ctree = comment_tree_list->first;
+  while (ctree != NULL) {
+    CommentAddress curr_comment = ctree->info.root;
+    if (curr_comment != NULL && curr_comment->info.user_id == user.id)
+      total_comment++; // Root
+
+    // Traversal child node
+    CommentAddress stack[100]; int top = 0;
+    if (curr_comment) stack[top++] = curr_comment;
+
+    while (top > 0) {
+      CommentAddress node = stack[--top];
+      CommentAddress child = node->first_child;
+      while (child) {
+        if (child->info.user_id == user.id)
+          total_comment++;
+        stack[top++] = child;
+        child = child->next_sibling;
+      }
+    }
+
+    ctree = ctree->next;
+  }
+
+  // Hitung total board
+  BoardAddress bcurr = board_list->first;
+  while (bcurr != NULL) {
+    if (bcurr->info.owner_id == user.id)
+      total_board++;
+    bcurr = bcurr->next;
+  }
+
+  int choice;
+  do {
+    ui_clear_screen();
+    printf("========================================\n");
+    printf("         PROFIL %s\n", user.username);
+    printf("========================================\n");
+    printf("Total Post     : %d\n", total_post);
+    printf("Total Komentar : %d\n", total_comment);
+    printf("Total Board    : %d\n", total_board);
+    printf("----------------------------------------\n");
+    printf("1. Lihat Post Saya\n");
+    printf("2. Lihat Komentar Saya\n");
+    printf("3. Lihat Board Saya\n");
+    printf("0. Kembali\n");
+    printf("========================================\n");
+    printf("Pilihan: ");
+    scanf("%d", &choice);
+    getchar();
+
+    switch (choice) {
+    case 1:
+      handle_posts_page(post_list, NULL, user, NULL, NULL, comment_tree_list, -1, user.id);
+      break;
+    case 2:
+      handle_top_comments_page(post_list, NULL, user, NULL, comment_tree_list, user.id, -1);
+      break;
+    case 3:
+      handle_boards_page(post_list, NULL, user, NULL, board_list, comment_tree_list, user.id);
+      break;
+    }
+  } while (choice != 0);
+
+  ui_clear_screen();
+}
+
 
 
 void handle_comment_selection(Item selected_item, UserList *user_list,
