@@ -1,6 +1,6 @@
 #ifndef NAVIGATION_STACK_H
 #define NAVIGATION_STACK_H
-
+#include "../../include/id/id.h"
 #include <stdbool.h>
 
 #define MAX_PAGE_NAME 100
@@ -22,6 +22,8 @@ void navigation_stack_push(NavigationStack *S, const char *page_name);
 void navigation_stack_pop(NavigationStack *S);
 char *navigation_stack_top(NavigationStack S);
 void navigation_stack_clear(NavigationStack *S);
+Id navigation_stack_get_last_post_id(NavigationStack *stack);
+Id navigation_stack_get_last_comment_id(NavigationStack *stack);
 
 // File persistence
 void save_navigation_stack(NavigationStack S, const char *filename);

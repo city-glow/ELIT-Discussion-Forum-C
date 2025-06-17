@@ -55,6 +55,28 @@ void save_navigation_stack(NavigationStack S, const char *filename) {
     fclose(f);
 }
 
+Id navigation_stack_get_last_post_id(NavigationStack *stack) {
+    NavigationAddress current = stack->top;
+    while (current != NULL) {
+        if (strncmp(current->page_name, "post:", 5) == 0) {
+        return atoi(current->page_name + 5);
+    }
+    current = current->next;
+    }
+  return -1; // Tidak ditemukan
+}
+
+Id navigation_stack_get_last_comment_id(NavigationStack *stack) {
+    NavigationAddress current = stack->top;
+    while (current != NULL) {
+        if (strncmp(current->page_name, "comment:", 8) == 0) {
+        return atoi(current->page_name + 8);
+    }
+    current = current->next;
+    }
+    return -1; // Tidak ditemukan
+}
+
 void load_navigation_stack(NavigationStack *S, const char *filename) {
     navigation_stack_clear(S);
     FILE *f = fopen(filename, "r");

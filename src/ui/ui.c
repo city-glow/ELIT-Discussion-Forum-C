@@ -493,6 +493,7 @@ int ui_show_single_comment(Comment comment, bool has_parent,
 
 // Function to handle moderation queue UI for a selected board
 void handle_moderate_queue(BoardList *board_list, PostList *post_list, User logged_user) {
+  (void)post_list; // mengatasi unusued parametere warning tapi ini beneran parametere PostList ga kepake disini?
   ui_clear_screen();
   printf("========================================\n");
   printf("         MODERATE POST QUEUE            \n");
