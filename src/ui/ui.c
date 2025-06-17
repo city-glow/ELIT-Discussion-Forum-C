@@ -1,6 +1,3 @@
-// TODO: Trending UI and handle
-// TODO:
-
 #include "../../include/ui/ui.h"
 #include "../../include/array/item.h"
 #include "../../include/array/itemArray.h"
