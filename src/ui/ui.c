@@ -14,6 +14,8 @@
 #include "../../include/ui/navigationStack.h"
 #include "../../include/vote/vote.h"
 #include "../../include/vote/voteList.h"
+#include "../../include/moderateThis/moderateThisQueue.h"
+#include "../../include/moderateThis/moderateThisList.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -482,6 +484,132 @@ int ui_show_single_comment(Comment comment, bool has_parent,
 // =======================
 // Handler Functions
 // =======================
+
+
+// Function to handle moderation queue UI for a selected board
+void handle_moderate_queue(BoardList *board_list, PostList *post_list, User logged_user) {
+  ui_clear_screen();
+  printf("========================================\n");
+  printf("         MODERATE POST QUEUE            \n");
+  printf("========================================\n");
+
+  // List boards owned by the user
+  BoardAddress current = board_list->first;
+  int index = 1;
+  BoardAddress owned_boards[100]; // Assuming max 100 boards owned
+  int owned_count = 0;
+
+  while (current != NULL) {
+    if (current->info.owner_id == logged_user.id) {
+      printf("%d. %s\n", index, current->info.title);
+      owned_boards[owned_count++] = current;
+      index++;
+    }
+    current = current->next;
+  }
+
+  if (owned_count == 0) {
+    printf("You do not own any boards.\n");
+    ui_pause();
+    return;
+  }
+
+  printf("Select a board to moderate (0 to cancel): ");
+  int choice;
+  scanf("%d", &choice);
+  getchar();
+
+  if (choice == 0 || choice > owned_count) {
+    printf("Moderation cancelled.\n");
+    ui_pause();
+    return;
+  }
+
+  BoardAddress selected_board = owned_boards[choice - 1];
+
+  // Load the moderation queue for the selected board
+  ModerateQueue queue;
+  moderate_queue_create(&queue);
+
+  // TODO: Load the actual queue data from storage or board data
+  // For now, simulate loading queue items (this should be replaced with actual loading logic)
+  // Example: moderate_queue_enqueue(&queue, some_moderate_request);
+
+  int exit_moderation = 0;
+  while (!exit_moderation) {
+    ui_clear_screen();
+    printf("Moderation queue for board: %s\n", selected_board->info.title);
+    printf("========================================\n");
+
+    if (moderate_queue_is_empty(queue)) {
+      printf("No posts waiting for moderation.\n");
+      ui_pause();
+      break;
+    }
+
+    // Display queue items
+    ModerateQueueAddress current = queue.front;
+    int index = 1;
+    while (current != NULL) {
+      printf("%d. Request ID: %d, User ID: %d, Approved: %s\n", index,
+             current->info.request_id, current->info.user_id,
+             current->info.is_approved ? "Yes" : "No");
+      current = current->next;
+      index++;
+    }
+
+    printf("Select a request to moderate (0 to cancel): ");
+    int choice;
+    scanf("%d", &choice);
+    getchar();
+
+    if (choice == 0) {
+      exit_moderation = 1;
+      continue;
+    }
+
+    // Find the selected request
+    current = queue.front;
+    index = 1;
+    ModerateQueueAddress selected_request = NULL;
+    while (current != NULL) {
+      if (index == choice) {
+        selected_request = current;
+        break;
+      }
+      current = current->next;
+      index++;
+    }
+
+    if (selected_request == NULL) {
+      printf("Invalid selection.\n");
+      ui_pause();
+      continue;
+    }
+
+    printf("Approve (a) or Reject (r) the request? ");
+    char action;
+    scanf(" %c", &action);
+    getchar();
+
+    if (action == 'a' || action == 'A') {
+      // TODO: Approve the post request
+      printf("Request approved.\n");
+      // Remove from queue and add to post list
+      // moderate_queue_dequeue(&queue, &selected_request->info);
+    } else if (action == 'r' || action == 'R') {
+      // TODO: Reject the post request
+      printf("Request rejected.\n");
+      // Remove from queue
+      // moderate_queue_dequeue(&queue, &selected_request->info);
+    } else {
+      printf("Invalid action.\n");
+    }
+    ui_pause();
+  }
+  ui_pause();
+}
+
 void handle_dashboard(BoardList *board_list, PostList *post_list,
                       UserList *user_list, VoteList *vote_list,
                       CommentTreeList *comment_tree_list, const User *user,
@@ -512,6 +640,10 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
         free(new_post->content);
         free(new_post);
       }
+
+    } else if (dashboard_choice == 2) {
+      navigation_stack_push(nav_stack, "moderate_queue");
+      handle_moderate_queue(board_list, post_list, *user);
 
     } else if (dashboard_choice == 3) {
       navigation_stack_push(nav_stack, "trending");
