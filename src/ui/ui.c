@@ -1130,31 +1130,23 @@ void handle_single_comment_page(Id comment_id, PostList *post_list,
   }
 }
 
-void resume_last_navigation(NavigationStack *nav_stack, User *logged_user,
-                            BoardList *board_list, PostList *post_list,
-                            UserList *user_list, VoteList *vote_list,
-                            CommentTreeList *comment_tree_list) {
+void resume_last_navigation(NavigationStack *nav_stack, User *logged_user,BoardList *board_list, PostList *post_list,UserList *user_list, VoteList *vote_list,CommentTreeList *comment_tree_list) {
   char *last_page = navigation_stack_top(*nav_stack);
   if (last_page != NULL) {
     if (strcmp(last_page, "dashboard") == 0) {
-      handle_dashboard(board_list, post_list, user_list, vote_list,
-                       comment_tree_list, logged_user, nav_stack);
+      handle_dashboard(board_list, post_list, user_list, vote_list,comment_tree_list, logged_user, nav_stack);
     } else if (strcmp(last_page, "trending") == 0) {
-      handle_posts_page(post_list, vote_list, *logged_user, user_list,
-                        board_list, comment_tree_list, -1, -1);
+      handle_posts_page(post_list, vote_list, *logged_user, user_list,board_list, comment_tree_list, -1, -1);
     } else if (strcmp(last_page, "boards") == 0) {
-      handle_boards_page(post_list, vote_list, *logged_user, user_list,
-                         board_list, comment_tree_list, -1);
+      handle_boards_page(post_list, vote_list, *logged_user, user_list,board_list, comment_tree_list, -1);
     } else {
       // Fallback
       navigation_stack_push(nav_stack, "dashboard");
-      handle_dashboard(board_list, post_list, user_list, vote_list,
-                       comment_tree_list, logged_user, nav_stack);
+      handle_dashboard(board_list, post_list, user_list, vote_list,comment_tree_list, logged_user, nav_stack);
     }
   } else {
     navigation_stack_push(nav_stack, "dashboard");
-    handle_dashboard(board_list, post_list, user_list, vote_list,
-                     comment_tree_list, logged_user, nav_stack);
+    handle_dashboard(board_list, post_list, user_list, vote_list,comment_tree_list, logged_user, nav_stack);
   }
 }
 

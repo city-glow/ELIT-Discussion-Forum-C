@@ -141,31 +141,8 @@ int main() {
             }
             is_logged_in = true;
             try_again = 0;
-
-            // Ambil halaman terakhir dari stack
-            char *last_page = navigation_stack_top(nav_stack);
-            if (last_page != NULL) {
-              if (strcmp(last_page, "dashboard") == 0) {
-                handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
-                                &comment_tree_list, &logged_user, &nav_stack);
-              } else if (strcmp(last_page, "trending") == 0) {
-                handle_posts_page(&post_list, &vote_list, logged_user, &user_list,
-                                  &board_list, &comment_tree_list, -1, -1);
-              } else if (strcmp(last_page, "boards") == 0) {
-                handle_boards_page(&post_list, &vote_list, logged_user, &user_list,
-                                  &board_list, &comment_tree_list, -1);
-              } else {
-                // Halaman tidak dikenali, default ke dashboard
-                navigation_stack_push(&nav_stack, "dashboard");
-                handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
-                                &comment_tree_list, &logged_user, &nav_stack);
-              }
-            } else {
-              // Stack kosong, mulai dari dashboard
-              navigation_stack_push(&nav_stack, "dashboard");
-              handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
-                              &comment_tree_list, &logged_user, &nav_stack);
-            }
+            // PANGGIL FUNGSI NAVIGASI
+            resume_last_navigation(&nav_stack, &logged_user, &board_list, &post_list,&user_list, &vote_list, &comment_tree_list);
           } else {
             printf("Coba lagi? (y/n): ");
             char yn[8];
