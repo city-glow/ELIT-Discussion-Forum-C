@@ -40,8 +40,8 @@ bool is_username_valid(char *username, UserList list) {
         printf("Username minimal 3 karakter!\n");
         return false;
     }
-
-    for (int i = 0; i < len; i++) {
+	int i = 0;
+    for (i = 0; i < len; i++) {
         char c = username[i];
         if (c == ' ') {
             printf("Username tidak boleh ada spasi!\n");
