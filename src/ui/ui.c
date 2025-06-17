@@ -264,7 +264,7 @@ void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
   if (total_items == 0) {
     printf("No comments yet...\n");
   } else {
-	int i = offset;
+    int i = offset;
     for (i = offset; i < offset + 10 && i < total_items; i++) {
       UserAddress found_user =
           user_search_by_id(user_list.first, items[i].info.c.user_id);
@@ -310,6 +310,7 @@ void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
   } else {
     printf("Q. Search\n");
   }
+  printf("W. Add comment\n");
   printf("0. Kembali\n");
 
   printf("========================================\n");
@@ -340,7 +341,7 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
   if (total_items == 0) {
     printf("No posts found...\n");
   } else {
-int i = offset;
+    int i = offset;
     for (i = offset; i < offset + 10 && i < total_items; i++) {
       UserAddress found_user =
           user_search_by_id(user_list.first, items[i].info.p.user_id);
@@ -392,6 +393,8 @@ int i = offset;
     if (this_board->info.owner_id == logged_user.id) {
       printf("D. Delete board\n");
     }
+  } else {
+    printf("W. Make post\n");
   }
   printf("0. Kembali\n");
 
@@ -412,7 +415,7 @@ void display_top_boards(Item *items, int total_items, int offset,
   if (total_items == 0) {
     printf("No boards found...\n");
   } else {
-	int i = offset;
+    int i = offset;
     for (i = offset; i < offset + 10 && i < total_items; i++) {
       printf("%d. board[%s%s%s]", i - offset + 1, ANSI_BOLD,
              items[i].info.b.title, ANSI_RESET);
@@ -663,8 +666,22 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
         free(search_term);
         search_term = strdup("");
       }
-    } else if (choice[0] == 'W' && board_id != -1) {
-      Post *new_post = create_post_input(board_id, logged_user.id);
+    } else if (choice[0] == 'W') {
+      int target_board_id = board_id;
+
+      if (target_board_id == -1) {
+        char board_title[MAX_TITLE + 1];
+        printf("Masukkan nama board tempat anda ingin post (maksimal 100): ");
+        fgets(board_title, sizeof(board_title), stdin);
+        board_title[strcspn(board_title, "\n")] = 0;
+
+        target_board_id =
+            get_or_create_board(board_list, board_title, logged_user.id);
+        if (target_board_id == -1)
+          continue;
+      }
+
+      Post *new_post = create_post_input(target_board_id, logged_user.id);
       if (new_post) {
         PostAddress post_node;
         post_create_node(&post_node);
@@ -764,68 +781,8 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
 
       comment_tree_list_insert(comment_tree_list, new_comment_node);
     } else if (menu_choice == 3) {
-      int exit_comments = 0;
-      char *search_term = "";
-      int total_items, offset = 0;
-      bool sort_by_new = false;
-      Id user_id = -1;
-      while (!exit_comments) {
-        bool search_bool = false;
-        if (strcmp(search_term, "") != 0) {
-          search_bool = true;
-        }
-        int total_items, offset = 0;
-        Item *top_comments = generate_top_comments_array(
-            *comment_tree_list, *vote_list, &total_items, post_id, search_term,
-            sort_by_new, user_id);
-        ui_clear_screen();
-
-        display_top_comments(top_comments, *user_list, *vote_list, total_items,
-                             offset, logged_user, *comment_tree_list,
-                             search_bool, sort_by_new, user_id);
-        char choice[10];
-        fgets(choice, sizeof(choice), stdin);
-        choice[strcspn(choice, "\n")] = 0;
-        if (choice[0] == 'N' && offset + 10 < total_items) {
-          offset += 10;
-        } else if (choice[0] == 'P' && offset > 0) {
-          offset -= 10;
-        } else if (choice[0] == '0') {
-          exit_comments = 1;
-          ui_clear_screen();
-        } else if (choice[0] == 'Q') {
-          if (strcmp(search_term, "") == 0) {
-
-            char content[1025];
-            printf("Masukkan search (maksimal 1024 karakter):\n");
-            fgets(content, sizeof(content), stdin);
-            content[strcspn(content, "\n")] = 0;
-
-            search_term = strdup(content);
-          } else {
-            free(search_term);
-            search_term = strdup("");
-          }
-        } else if (choice[0] == 'S') {
-          sort_by_new = !sort_by_new;
-        } else if (choice[0] == 'M') {
-          if (user_id == -1) {
-            user_id = logged_user.id;
-          } else {
-            user_id = -1;
-          }
-        } else {
-          int selected = atoi(choice);
-          if (selected > 0 && selected <= 10 &&
-              offset + selected <= total_items) {
-            handle_comment_selection(top_comments[offset + selected - 1],
-                                     user_list, comment_tree_list, vote_list,
-                                     post_list, logged_user);
-          }
-        }
-        free(top_comments);
-      }
-      ui_clear_screen();
+      handle_top_comments_page(post_list, vote_list, logged_user, user_list,
+                               comment_tree_list, -1, post_id);
     } else if (menu_choice == 4 && logged_user.id == this_post->info.user_id) {
       printf("Post dan seluruh komentarnya akan dihapus. Apakah anda "
              "yakin? (y/n): ");
@@ -850,6 +807,89 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
       ui_pause();
     }
   }
+}
+
+void handle_top_comments_page(PostList *post_list, VoteList *vote_list,
+                              User logged_user, UserList *user_list,
+                              CommentTreeList *comment_tree_list, Id user_id,
+                              Id post_id) {
+  int exit_comments = 0;
+  char *search_term = "";
+  int total_items, offset = 0;
+  bool sort_by_new = false;
+  while (!exit_comments) {
+    bool search_bool = false;
+    if (strcmp(search_term, "") != 0) {
+      search_bool = true;
+    }
+    Item *top_comments = generate_top_comments_array(
+        *comment_tree_list, *vote_list, &total_items, post_id, search_term,
+        sort_by_new, user_id);
+    ui_clear_screen();
+
+    display_top_comments(top_comments, *user_list, *vote_list, total_items,
+                         offset, logged_user, *comment_tree_list, search_bool,
+                         sort_by_new, user_id);
+    char choice[10];
+    fgets(choice, sizeof(choice), stdin);
+    choice[strcspn(choice, "\n")] = 0;
+    if (choice[0] == 'N' && offset + 10 < total_items) {
+      offset += 10;
+    } else if (choice[0] == 'P' && offset > 0) {
+      offset -= 10;
+    } else if (choice[0] == '0') {
+      exit_comments = 1;
+      ui_clear_screen();
+    } else if (choice[0] == 'W') {
+      char content[1025];
+      printf("Masukkan konten komentar (maksimal 1024 karakter):\n");
+      fgets(content, sizeof(content), stdin);
+      content[strcspn(content, "\n")] = 0;
+
+      Comment wa;
+      create_comment(&wa, logged_user.id, post_id, -1, content);
+      CommentAddress new_comment_node;
+      new_comment_node = (CommentAddress)malloc(sizeof(CommentElmtList));
+      new_comment_node->info = wa;
+      new_comment_node->info.content = strdup(wa.content);
+      new_comment_node->first_child = NULL;
+      new_comment_node->next_sibling = NULL;
+      new_comment_node->parent = NULL;
+      free(wa.content);
+
+      comment_tree_list_insert(comment_tree_list, new_comment_node);
+    } else if (choice[0] == 'Q') {
+      if (strcmp(search_term, "") == 0) {
+
+        char content[1025];
+        printf("Masukkan search (maksimal 1024 karakter):\n");
+        fgets(content, sizeof(content), stdin);
+        content[strcspn(content, "\n")] = 0;
+
+        search_term = strdup(content);
+      } else {
+        free(search_term);
+        search_term = strdup("");
+      }
+    } else if (choice[0] == 'S') {
+      sort_by_new = !sort_by_new;
+    } else if (choice[0] == 'M') {
+      if (user_id == -1) {
+        user_id = logged_user.id;
+      } else {
+        user_id = -1;
+      }
+    } else {
+      int selected = atoi(choice);
+      if (selected > 0 && selected <= 10 && offset + selected <= total_items) {
+        handle_comment_selection(top_comments[offset + selected - 1], user_list,
+                                 comment_tree_list, vote_list, post_list,
+                                 logged_user);
+      }
+    }
+    free(top_comments);
+  }
+  ui_clear_screen();
 }
 
 void handle_single_comment_page(Id comment_id, PostList *post_list,

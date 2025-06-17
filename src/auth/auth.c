@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <time.h>
 
 // Helper: Generate random salt (for demonstration)
@@ -29,19 +30,25 @@ bool is_username_taken(UserList list, char *username) {
 }
 
 bool is_username_valid(char *username, UserList list) {
-    if (username == NULL) {
+    if (username == NULL || strcmp(username, "") == 0) {
         printf("Username tidak boleh kosong!!\n");
         return false;
     }
 
-    if (strcmp(username, "") == 0) {
-        printf("Username tidak boleh kosong!!\n");
+    int len = strlen(username);
+    if (len < 3) {
+        printf("Username minimal 3 karakter!\n");
         return false;
     }
-	int i = 0;
-    for (i = 0; username[i] != '\0'; i++) {
-        if (username[i] == ' ') {
+
+    for (int i = 0; i < len; i++) {
+        char c = username[i];
+        if (c == ' ') {
             printf("Username tidak boleh ada spasi!\n");
+            return false;
+        }
+        if (!(isalnum(c) || c == '_')) {
+            printf("Username hanya boleh mengandung huruf, angka, dan underscore (_)\n");
             return false;
         }
     }
@@ -53,6 +60,7 @@ bool is_username_valid(char *username, UserList list) {
 
     return true;
 }
+
 
 bool register_user(UserList *list, char *username, char *password) {
     if (!is_username_valid(username, *list)) {
