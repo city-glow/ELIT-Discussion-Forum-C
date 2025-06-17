@@ -11,9 +11,9 @@
 #include "../../include/comment/commentTreeList.h"
 #include "../../include/post/post.h"
 #include "../../include/post/postList.h"
+#include "../../include/ui/navigationStack.h"
 #include "../../include/vote/vote.h"
 #include "../../include/vote/voteList.h"
-#include "../../include/ui/navigationStack.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -133,6 +133,7 @@ void ui_logout() {
 // =======================
 // Input/Creation Functions
 // =======================
+//
 int get_or_create_board(BoardList *board_list, char *board_title, int user_id) {
   BoardAddress found = board_search_by_title(board_list->first, board_title);
   if (!board_is_empty(found)) {
@@ -368,7 +369,9 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
   } else {
     printf("Q. Search\n");
   }
-  printf("Z. Make New Post\n");
+  if (board_id != -1) {
+    printf("W. Make post in this board\n");
+  }
   printf("0. Kembali\n");
 
   printf("========================================\n");
@@ -415,7 +418,7 @@ void display_top_boards(Item *items, int total_items, int offset,
   } else {
     printf("Q. Search\n");
   }
-  printf("Z. Make New Board\n");
+  printf("W. Make New Board\n");
   printf("0. Kembali\n");
 
   printf("========================================\n");
@@ -476,7 +479,8 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
       board_title[strcspn(board_title, "\n")] = 0;
 
       int board_id = get_or_create_board(board_list, board_title, user->id);
-      if (board_id == -1) continue;
+      if (board_id == -1)
+        continue;
 
       Post *new_post = create_post_input(board_id, user->id);
       if (new_post) {
@@ -499,7 +503,8 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
                          comment_tree_list, -1);
 
     } else if (dashboard_choice == 9) {
-      save_navigation_stack(*nav_stack, "../storage/navigation.dat"); // Simpan stack sebelum exit
+      save_navigation_stack(
+          *nav_stack, "../storage/navigation.dat"); // Simpan stack sebelum exit
       save_board_list(board_list, "../storage/boards.dat");
       save_vote_list(vote_list, "../storage/votes.dat");
       save_user_list(user_list, "../storage/users.dat");
@@ -519,7 +524,6 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
   } while (dashboard_choice != 0); // 0 = logout
   save_navigation_stack(*nav_stack, "../storage/navigation.dat");
 }
-
 
 void handle_boards_page(PostList *post_list, VoteList *vote_list,
                         User logged_user, UserList *user_list,
@@ -568,6 +572,12 @@ void handle_boards_page(PostList *post_list, VoteList *vote_list,
       } else {
         search_term = strdup("");
       }
+    } else if (choice[0] == 'W') {
+      char board_title[MAX_TITLE + 1];
+      printf("Masukkan nama board (maksimal 100 karakter): ");
+      fgets(board_title, sizeof(board_title), stdin);
+      board_title[strcspn(board_title, "\n")] = 0;
+      get_or_create_board(board_list, board_title, logged_user.id);
     } else {
       int selected = atoi(choice);
       if (selected > 0 && selected <= 10 && offset + selected <= total_items) {
@@ -630,6 +640,16 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
         search_term = strdup(content);
       } else {
         search_term = strdup("");
+      }
+    } else if (choice[0] == 'W' && board_id != -1) {
+      Post *new_post = create_post_input(board_id, logged_user.id);
+      if (new_post) {
+        PostAddress post_node;
+        post_create_node(&post_node);
+        post_isi_node(&post_node, *new_post);
+        post_insert(post_list, post_node);
+        free(new_post->content);
+        free(new_post);
       }
     } else {
       int selected = atoi(choice);
