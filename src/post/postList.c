@@ -155,6 +155,26 @@ void post_deallocation(PostAddress *p) {
   }
 }
 
+// Delete all posts by board id and save after deletion
+void post_delete_all_by_board_id(PostList *list, Id board_id, VoteList *vote_list, CommentTreeList *comment_tree_list) {
+  PostAddress *curr = &(list->first);
+  while (*curr != NULL) {
+    if ((*curr)->info.board_id == board_id) {
+      Post X;
+      PostAddress to_delete = *curr;
+      *curr = (*curr)->next;
+      post_delete_by_address(curr, to_delete, &X);
+      vote_delete_all_by_target(&vote_list->first, X.id, VOTE_TARGET_POST);
+      CommentTree Y;
+      comment_delete_all_post_id_with_votes(&(comment_tree_list->first), X.id, &Y, vote_list);
+      save_post_list(list, "../storage/posts.dat");
+    } else {
+      curr = &((*curr)->next);
+    }
+  }
+  save_post_list(list, "../storage/posts.dat");
+}
+
 int post_count(PostAddress p) {
   if (post_is_empty(p)) {
     return 0;

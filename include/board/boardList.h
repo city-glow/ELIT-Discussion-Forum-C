@@ -1,6 +1,11 @@
 #ifndef BOARDLIST_H
 #define BOARDLIST_H
 #include "board.h"
+#include "../post/postList.h"
+#include "../comment/commentTreeList.h"
+#include "../vote/voteList.h"
+#include "board.h"
+#include "board.h"
 #include <stdbool.h>
 
 typedef struct BoardTElmtList *BoardAddress;
@@ -22,7 +27,7 @@ void board_insert(BoardList *p, BoardAddress PNew);
 BoardAddress board_search_by_id(BoardAddress p, Id nilai);
 BoardAddress board_search_by_title(BoardAddress p, char* title);
 // void board_delete_by_address(BoardAddress *p, BoardAddress pDel, board *X);
-void board_delete_by_id(BoardAddress *p, Id nilai, Board *X);
+void board_delete_by_id(BoardList *p, Id nilai, Board *X, PostList *list, VoteList *vote_list, CommentTreeList *comment_tree_list);
 void board_deallocation(BoardAddress *p);
 int board_count(BoardAddress p);
 BoardAddress board_balik_list(BoardAddress p);

@@ -76,6 +76,7 @@ void board_insert(BoardList *p, BoardAddress PNew) {
   (*p).id_max += 1;
   PNew->info.id = p->id_max;
   board_insert_akhir(&(p->first), PNew);
+  save_board_list(p, "../storage/boards.dat");
 }
 
 int board_insert_and_get_id(BoardList *p, BoardAddress PNew) {
@@ -83,6 +84,7 @@ int board_insert_and_get_id(BoardList *p, BoardAddress PNew) {
   PNew->info.id = p->id_max;
   board_insert_akhir(&(p->first), PNew);
   return PNew->info.id;
+  save_board_list(p, "../storage/boards.dat");
 }
 
 void board_insert_after(BoardAddress *pBef, BoardAddress PNew) {
@@ -147,10 +149,11 @@ void board_delete_by_address(BoardAddress *p, BoardAddress pDel, Board *X) {
   }
 }
 
-void board_delete_by_id(BoardAddress *p, Id nilai, Board *X) {
-  BoardAddress target = board_search_by_id(*p, nilai);
-  board_delete_by_address(p, target, X);
-
+void board_delete_by_id(BoardList *p, Id nilai, Board *X, PostList *list, VoteList *vote_list, CommentTreeList *comment_tree_list) {
+  BoardAddress target = board_search_by_id(p->first, nilai);
+  board_delete_by_address(&p->first, target, X);
+  save_board_list(p, "../storage/boards.dat");
+  post_delete_all_by_board_id(list, X->id, vote_list, comment_tree_list);
 }
 
 void board_deallocation(BoardAddress *p) {

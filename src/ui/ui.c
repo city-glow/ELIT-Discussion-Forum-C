@@ -371,6 +371,10 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
   }
   if (board_id != -1) {
     printf("W. Make post in this board\n");
+    BoardAddress this_board = board_search_by_id(board_list.first, board_id);
+    if (this_board->info.owner_id == logged_user.id) {
+      printf("D. Delete board\n");
+    }
   }
   printf("0. Kembali\n");
 
@@ -650,6 +654,25 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
         post_insert(post_list, post_node);
         free(new_post->content);
         free(new_post);
+      }
+    } else if (choice[0] == 'D') {
+      BoardAddress this_board = board_search_by_id(board_list->first, board_id);
+      if (this_board->info.owner_id == logged_user.id) {
+        Board X;
+        printf("Board dan seluruh komen dan post di dalamnya akan dihapus. "
+               "Apakah anda yakin? (y/n): ");
+        char choice_line[8]; // small buffer
+        fgets(choice_line, sizeof(choice_line), stdin);
+
+        if (choice_line[0] != 'y' && choice_line[0] != 'Y') {
+          printf("Penghapusan board dibatalkan.\n");
+        } else {
+          board_delete_by_id(board_list, board_id, &X, post_list, vote_list,
+                             comment_tree_list);
+          printf("Board berhasil dihapus\n");
+          ui_pause();
+          exit_posts = 1;
+        }
       }
     } else {
       int selected = atoi(choice);
