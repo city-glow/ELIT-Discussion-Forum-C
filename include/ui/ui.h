@@ -17,9 +17,12 @@ void ui_create_post();
 void print_vote(bool has_voted, Vote my_vote, int vote_sum);
 void ui_show_trending_posts();
 int ui_show_dashboard(User user);
-void handle_dashboard(BoardList *board_list, PostList *post_list,
-                      UserList *user_list, VoteList *vote_list,
-                      CommentTreeList *comment_tree_list, const User *user,
+void handle_dashboard(BoardList *board_list,
+                      PostList *post_list,
+                      UserList *user_list,
+                      VoteList *vote_list,
+                      CommentTreeList *comment_tree_list,
+                      User *logged_user,
                       NavigationStack *nav_stack);
 
 void handle_moderate_queue(BoardList *board_list, PostList *post_list, User logged_user);
@@ -66,5 +69,5 @@ void handle_profile(User user,
                     BoardList *board_list,
                     CommentTreeList *comment_tree_list,NavigationStack *nav_stack);
 
-                    
+
 #endif
