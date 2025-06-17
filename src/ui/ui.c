@@ -73,9 +73,10 @@ int ui_show_dashboard(User user) {
   printf("--- Selamat datang, %s!\n", user.username);
   printf("========================================\n");
   printf("1. Add Post\n");
-  printf("2. See Profile\n");
-  printf("3. Trending Posts\n");
-  printf("4. See Boards\n");
+  printf("2. Moderate Post Queue\n");
+  printf("3. See Profile\n");
+  printf("4. Trending Posts\n");
+  printf("5. See Boards\n");
   printf("0. Logout\n");
   printf("9. Exit\n");
   printf("========================================\n");
@@ -363,8 +364,12 @@ void display_top_posts(Item *items, UserList user_list, VoteList vote_list,
       if (board_id == -1) {
         BoardAddress this_board =
             board_search_by_id(board_list.first, items[i].info.p.board_id);
-        printf(" | in board[%s%s%s]", ANSI_BOLD, this_board->info.title,
-               ANSI_RESET);
+        if (this_board != NULL) {
+          printf(" | in board[%s%s%s]", ANSI_BOLD, this_board->info.title,
+                 ANSI_RESET);
+        } else {
+          printf(" | in board[Unknown]");
+        }
       }
       printf("\n");
     }
@@ -649,14 +654,25 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
       handle_moderate_queue(board_list, post_list, *user);
 
     } else if (dashboard_choice == 3) {
+      // See Profile
+      // TODO: Implement profile handling here
+      printf("Profile page is under construction.\n");
+      ui_pause();
+
+    } else if (dashboard_choice == 4) {
       navigation_stack_push(nav_stack, "trending");
       handle_posts_page(post_list, vote_list, *user, user_list, board_list,
                         comment_tree_list, -1, -1);
 
-    } else if (dashboard_choice == 4) {
+    } else if (dashboard_choice == 5) {
       navigation_stack_push(nav_stack, "boards");
       handle_boards_page(post_list, vote_list, *user, user_list, board_list,
                          comment_tree_list, -1);
+
+    } else if (dashboard_choice == 0) {
+      // Logout
+      printf("Logging out...\n");
+      break;
 
     } else if (dashboard_choice == 9) {
       save_navigation_stack(
@@ -675,6 +691,9 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
 
       printf("Exiting...\n");
       exit(0);
+    } else {
+      printf("Invalid choice. Please try again.\n");
+      ui_pause();
     }
 
   } while (dashboard_choice != 0); // 0 = logout
@@ -754,8 +773,11 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
                        Id user_id) {
   int total_items, offset = 0;
   bool sort_by_new = false;
-  char *search_term = "";
+  char *search_term = NULL;
   int exit_posts = 0;
+
+  search_term = strdup("");
+
   while (!exit_posts) {
     bool search = false;
     if (strcmp(search_term, "") != 0)
@@ -793,6 +815,7 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
         fgets(content, sizeof(content), stdin);
         content[strcspn(content, "\n")] = 0;
 
+        free(search_term);
         search_term = strdup(content);
       } else {
         free(search_term);
@@ -851,6 +874,7 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
     }
     free(top_posts);
   }
+  free(search_term);
   ui_clear_screen();
 }
 

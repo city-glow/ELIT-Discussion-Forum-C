@@ -21,6 +21,8 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
                       UserList *user_list, VoteList *vote_list,
                       CommentTreeList *comment_tree_list, const User *user,
                       NavigationStack *nav_stack);
+
+void handle_moderate_queue(BoardList *board_list, PostList *post_list, User logged_user);
 int ui_show_post(Post post, User poster, Board board, int vote_sum,
                  bool has_voted, Vote my_vote, User logged_user);
 void get_vote_result(VoteList vote_list, int *vote_sum, Id current_user_id,
