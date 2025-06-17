@@ -648,14 +648,14 @@ void handle_dashboard(BoardList *board_list, PostList *post_list,
       }
 
     } else if (dashboard_choice == 2) {
-      //navigation_stack_push(nav_stack, "moderate_queue");
-      //handle_moderate_queue(board_list, post_list, *user);
-      handle_profile(*user, post_list, comment_tree_list, board_list, nav_stack);
+      navigation_stack_push(nav_stack, "moderate_queue");
+      handle_moderate_queue(board_list, post_list, *user);
 
     } else if (dashboard_choice == 3) {
       // See Profile
       // TODO: Implement profile handling here
-      printf("Profile page is under construction.\n");
+      //printf("Profile page is under construction.\n");
+      handle_profile(*user, post_list, comment_tree_list, board_list, nav_stack);
       ui_pause();
 
     } else if (dashboard_choice == 4) {
