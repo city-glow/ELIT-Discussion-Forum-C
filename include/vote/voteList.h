@@ -23,12 +23,12 @@ void vote_tampil_list(VoteAddress p);
 void vote_insert(VoteList *p, VoteAddress PNew);
 VoteAddress vote_search_by_id(VoteAddress p, Id nilai);
 // void vote_delete_by_address(VoteAddress *p, VoteAddress pDel, Vote *X);
-void vote_delete_by_id(VoteAddress *p, Id nilai, Vote *X);
+void vote_delete_by_id(VoteList *p, Id nilai, Vote *X);
 void vote_deallocation(VoteAddress *p);
 int vote_count(VoteAddress p);
 VoteAddress vote_balik_list(VoteAddress p);
-void vote_delete_all_by_target(VoteAddress *p, Id target_id, VoteTargetType target_type);
-void vote_delete_all_by_user(VoteAddress *p, Id user_id);
+void vote_delete_all_by_target(VoteList *p, Id target_id, VoteTargetType target_type);
+void vote_delete_all_by_user(VoteList *p, Id user_id);
 
 void save_vote_list(VoteList *list, const char *filename);
 void load_vote_list(VoteList *list, const char *filename);

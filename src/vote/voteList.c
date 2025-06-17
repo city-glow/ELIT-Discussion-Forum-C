@@ -95,6 +95,7 @@ void vote_insert(VoteList *p, VoteAddress PNew) {
   (*p).id_max += 1;
   PNew->info.id = p->id_max;
   vote_insert_akhir(&(p->first), PNew);
+  save_vote_list(p, "../storage/votes.dat");
 }
 
 void vote_insert_after(VoteAddress *pBef, VoteAddress PNew) {
@@ -159,22 +160,23 @@ void vote_delete_by_address(VoteAddress *p, VoteAddress pDel, Vote *X) {
   }
 }
 
-void vote_delete_by_id(VoteAddress *p, Id nilai, Vote *X) {
-  VoteAddress target = vote_search_by_id(*p, nilai);
-  vote_delete_by_address(p, target, X);
+void vote_delete_by_id(VoteList *p, Id nilai, Vote *X) {
+  VoteAddress target = vote_search_by_id(p->first, nilai);
+  vote_delete_by_address(&p->first, target, X);
+  save_vote_list(p, "../storage/votes.dat");
 }
 
 // Delete all votes by target_id and target_type
-void vote_delete_all_by_target(VoteAddress *p, Id target_id, VoteTargetType target_type) {
-  VoteAddress curr = *p;
+void vote_delete_all_by_target(VoteList *p, Id target_id, VoteTargetType target_type) {
+  VoteAddress curr = p->first;
   VoteAddress prev = NULL;
   while (curr != NULL) {
     VoteAddress next = curr->next;
     if (curr->info.target_id == target_id && curr->info.target_type == target_type) {
       Vote dummy;
       if (prev == NULL) {
-        vote_del_awal(p, &dummy);
-        curr = *p;
+        vote_del_awal(&p->first, &dummy);
+        curr = p->first;
       } else {
         vote_del_after(&prev, &dummy);
         curr = prev->next;
@@ -184,19 +186,20 @@ void vote_delete_all_by_target(VoteAddress *p, Id target_id, VoteTargetType targ
       curr = next;
     }
   }
+  save_vote_list(p, "../storage/votes.dat");
 }
 
 // Delete all votes by user_id
-void vote_delete_all_by_user(VoteAddress *p, Id user_id) {
-  VoteAddress curr = *p;
+void vote_delete_all_by_user(VoteList *p, Id user_id) {
+  VoteAddress curr = p->first;
   VoteAddress prev = NULL;
   while (curr != NULL) {
     VoteAddress next = curr->next;
     if (curr->info.user_id == user_id) {
       Vote dummy;
       if (prev == NULL) {
-        vote_del_awal(p, &dummy);
-        curr = *p;
+        vote_del_awal(&p->first, &dummy);
+        curr = p->first;
       } else {
         vote_del_after(&prev, &dummy);
         curr = prev->next;
@@ -206,6 +209,7 @@ void vote_delete_all_by_user(VoteAddress *p, Id user_id) {
       curr = next;
     }
   }
+  save_vote_list(p, "../storage/votes.dat");
 }
 
 void vote_deallocation(VoteAddress *p) {

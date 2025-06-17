@@ -107,7 +107,8 @@ bool board_matches_search(Board board, const char *search_term) {
 
 Item *generate_top_comments_array(CommentTreeList comment_list,
                                   VoteList vote_list, int *count, Id post_id,
-                                  const char *search_term, bool sort_by_new) {
+                                  const char *search_term, bool sort_by_new,
+                                  Id user) {
   int size = comment_tree_list_count(comment_list.first);
   Item *items = (Item *)malloc(size * sizeof(Item));
   *count = 0;
@@ -115,9 +116,12 @@ Item *generate_top_comments_array(CommentTreeList comment_list,
   while (current != NULL) {
     if (current->info.root != NULL) {
       if (current->info.post_id == post_id) {
+
+        bool user_match =
+            (user == -1 || current->info.root->info.user_id == user);
         bool search_match =
             comment_matches_search(current->info.root->info, search_term);
-        if (search_match) {
+        if (user_match && search_match) {
 
           items[*count].info.c = current->info.root->info;
           items[*count].type = ITEM_TYPE_COMMENT;

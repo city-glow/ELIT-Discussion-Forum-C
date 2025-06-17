@@ -276,7 +276,7 @@ void delete_votes_in_comment_tree(CommentAddress node,
   if (!node)
     return;
   // Delete all votes for this comment
-  vote_delete_all_by_target(&vote_list->first, node->info.id,
+  vote_delete_all_by_target(vote_list, node->info.id,
                             VOTE_TARGET_COMMENT);
   // Traverse children
   CommentAddress child = node->first_child;

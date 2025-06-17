@@ -66,6 +66,7 @@ void post_insert(PostList *p, PostAddress PNew) {
   (*p).id_max += 1;
   PNew->info.id = p->id_max;
   post_insert_akhir(&(p->first), PNew);
+  save_post_list(p, "../storage/posts.dat");
 }
 
 void post_insert_after(PostAddress *pBef, PostAddress PNew) {
@@ -139,13 +140,14 @@ void post_delete_by_address(PostAddress *p, PostAddress pDel, Post *X) {
   }
 }
 
-void post_delete_by_id(PostAddress *p, Id nilai, Post *X, VoteList *vote_list,
+void post_delete_by_id(PostList *p, Id nilai, Post *X, VoteList *vote_list,
                        CommentTreeList *comment_tree_list) {
-  PostAddress target = post_search_by_id(*p, nilai);
-  post_delete_by_address(p, target, X);
-  vote_delete_all_by_target(&(*vote_list).first, X->id, VOTE_TARGET_POST);
+  PostAddress target = post_search_by_id(p->first, nilai);
+  post_delete_by_address(&p->first, target, X);
+  vote_delete_all_by_target(vote_list, X->id, VOTE_TARGET_POST);
   CommentTree Y;
-  comment_delete_all_post_id_with_votes(&(comment_tree_list->first), X->id, &Y, vote_list);
+  comment_delete_all_post_id_with_votes(comment_tree_list, X->id, &Y, vote_list);
+  save_post_list(p, "../storage/posts.dat");
 }
 
 void post_deallocation(PostAddress *p) {
@@ -164,9 +166,9 @@ void post_delete_all_by_board_id(PostList *list, Id board_id, VoteList *vote_lis
       PostAddress to_delete = *curr;
       *curr = (*curr)->next;
       post_delete_by_address(curr, to_delete, &X);
-      vote_delete_all_by_target(&vote_list->first, X.id, VOTE_TARGET_POST);
+      vote_delete_all_by_target(vote_list, X.id, VOTE_TARGET_POST);
       CommentTree Y;
-      comment_delete_all_post_id_with_votes(&(comment_tree_list->first), X.id, &Y, vote_list);
+      comment_delete_all_post_id_with_votes(comment_tree_list, X.id, &Y, vote_list);
       save_post_list(list, "../storage/posts.dat");
     } else {
       curr = &((*curr)->next);

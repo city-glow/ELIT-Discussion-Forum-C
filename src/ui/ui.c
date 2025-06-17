@@ -32,12 +32,12 @@
 // Utility/UI Helper Functions
 // =======================
 void ui_clear_screen() {
-// #ifdef _WIN32
-//   system("cls");
-// #else
-//   system("clear");
-// #endif
-// for college requirements
+  // #ifdef _WIN32
+  //   system("cls");
+  // #else
+  //   system("clear");
+  // #endif
+  // for college requirements
 }
 
 void ui_pause() {
@@ -255,7 +255,8 @@ int ui_show_post(Post post, User poster, Board board, int vote_sum,
 
 void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
                           int total_items, int offset, User logged_user,
-                          CommentTreeList comment_tree_list, bool search, bool sort_by_new) {
+                          CommentTreeList comment_tree_list, bool search,
+                          bool sort_by_new, Id user_id) {
   ui_clear_screen();
   printf("========================================\n");
   printf("-- Top Comments\n");
@@ -298,6 +299,11 @@ void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
     printf("S. Sort by name\n");
   } else {
     printf("S. Sort by new\n");
+  }
+  if (user_id != -1) {
+    printf("M. Every comments (not only mine)\n");
+  } else {
+    printf("M. Only my comment\n");
   }
   if (search) {
     printf("Q. Delete search query\n");
@@ -729,7 +735,7 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
           my_vote->info.is_upvote = false;
         } else {
           Vote X;
-          vote_delete_by_id(&(vote_list->first), my_vote_id, &X);
+          vote_delete_by_id(vote_list, my_vote_id, &X);
         }
       } else {
         Vote new_vote;
@@ -762,6 +768,7 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
       char *search_term = "";
       int total_items, offset = 0;
       bool sort_by_new = false;
+      Id user_id = -1;
       while (!exit_comments) {
         bool search_bool = false;
         if (strcmp(search_term, "") != 0) {
@@ -770,12 +777,12 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
         int total_items, offset = 0;
         Item *top_comments = generate_top_comments_array(
             *comment_tree_list, *vote_list, &total_items, post_id, search_term,
-            sort_by_new);
+            sort_by_new, user_id);
         ui_clear_screen();
 
         display_top_comments(top_comments, *user_list, *vote_list, total_items,
                              offset, logged_user, *comment_tree_list,
-                             search_bool, sort_by_new);
+                             search_bool, sort_by_new, user_id);
         char choice[10];
         fgets(choice, sizeof(choice), stdin);
         choice[strcspn(choice, "\n")] = 0;
@@ -801,6 +808,12 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
           }
         } else if (choice[0] == 'S') {
           sort_by_new = !sort_by_new;
+        } else if (choice[0] == 'M') {
+          if (user_id == -1) {
+            user_id = logged_user.id;
+          } else {
+            user_id = -1;
+          }
         } else {
           int selected = atoi(choice);
           if (selected > 0 && selected <= 10 &&
@@ -831,7 +844,7 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
         user_search_by_id(user_list->first, this_post->info.user_id);
     if (this_post->info.user_id == poster->info.id) {
       Post X;
-      post_delete_by_id(&(post_list->first), this_post->info.id, &X, vote_list,
+      post_delete_by_id(post_list, this_post->info.id, &X, vote_list,
                         comment_tree_list);
       printf("Post deleted successfully...\n");
       ui_pause();
@@ -889,7 +902,7 @@ void handle_single_comment_page(Id comment_id, PostList *post_list,
           my_vote->info.is_upvote = false;
         } else {
           Vote X;
-          vote_delete_by_id(&(vote_list->first), my_vote_id, &X);
+          vote_delete_by_id(vote_list, my_vote_id, &X);
         }
       } else {
         Vote new_vote;

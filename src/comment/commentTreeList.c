@@ -140,6 +140,7 @@ void comment_tree_list_insert(CommentTreeList *p, CommentAddress PNew) {
       // You could log a warning or handle the orphaned comment here
     }
   }
+  save_comment_tree_list(p, "../storage/comments.dat");
 }
 
 void comment_tree_list_insert_after(CommentTreeAddress *pBef,
@@ -211,34 +212,37 @@ void comment_tree_list_delete_by_post_id(CommentTreeAddress *p, Id nilai,
                                          CommentTree *X) {
   CommentTreeAddress target = comment_tree_list_search_by_post_id(*p, nilai);
   comment_tree_list_delete_by_address(p, target, X);
+
 }
 
 // #include "../../include/vote/voteList.h"
 // ...
 
 
-void comment_delete_all_post_id_with_votes(CommentTreeAddress *p, Id nilai,
+void comment_delete_all_post_id_with_votes(CommentTreeList *p, Id nilai,
                                            CommentTree *X,
                                            VoteList *vote_list) {
-  CommentTreeAddress target = comment_tree_list_search_by_post_id(*p, nilai);
+  CommentTreeAddress target = comment_tree_list_search_by_post_id(p->first, nilai);
   while (target != NULL) {
     // Delete votes for all comments in this tree
     if (target->info.root) {
       delete_votes_in_comment_tree(target->info.root, vote_list);
     }
-    comment_tree_list_delete_by_address(p, target, X);
-    target = comment_tree_list_search_by_post_id(*p, nilai);
+    comment_tree_list_delete_by_address(&p->first, target, X);
+    target = comment_tree_list_search_by_post_id(p->first, nilai);
   }
+  save_comment_tree_list(p, "../storage/comments.dat");
 }
 
 // Old function kept for compatibility
-void comment_delete_all_post_id(CommentTreeAddress *p, Id nilai,
+void comment_delete_all_post_id(CommentTreeList *p, Id nilai,
                                 CommentTree *X) {
-  CommentTreeAddress target = comment_tree_list_search_by_post_id(*p, nilai);
+  CommentTreeAddress target = comment_tree_list_search_by_post_id(p->first, nilai);
   while (target != NULL) {
-    comment_tree_list_delete_by_address(p, target, X);
-    target = comment_tree_list_search_by_post_id(*p, nilai);
+    comment_tree_list_delete_by_address(&p->first, target, X);
+    target = comment_tree_list_search_by_post_id(p->first, nilai);
   }
+  save_comment_tree_list(p, "../storage/comments.dat");
 }
 
 void comment_tree_list_delete_comment_by_id(CommentTreeList *p, Id nilai,
@@ -270,6 +274,7 @@ void comment_tree_list_delete_comment_by_id(CommentTreeList *p, Id nilai,
 
     tree = tree->next;
   }
+  save_comment_tree_list(p, "../storage/comments.dat");
 }
 
 void comment_tree_list_deallocation(CommentTreeAddress *p) {
