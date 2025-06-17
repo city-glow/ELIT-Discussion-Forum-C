@@ -52,4 +52,9 @@ void handle_top_comments_page(PostList *post_list, VoteList *vote_list,
                               CommentTreeList *comment_tree_list, Id user_id,
                               Id post_id);
 
+void resume_last_navigation(NavigationStack *nav_stack, User *logged_user,
+                            BoardList *board_list, PostList *post_list,
+                            UserList *user_list, VoteList *vote_list,
+                            CommentTreeList *comment_tree_list);
+
 #endif
