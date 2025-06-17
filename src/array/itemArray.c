@@ -115,13 +115,13 @@ Item *generate_top_comments_array(CommentTreeList comment_list,
   CommentTreeAddress current = comment_list.first;
   while (current != NULL) {
     if (current->info.root != NULL) {
-      if (current->info.post_id == post_id) {
+        bool post_match = (post_id == -1 || current->info.post_id);
 
         bool user_match =
             (user == -1 || current->info.root->info.user_id == user);
         bool search_match =
             comment_matches_search(current->info.root->info, search_term);
-        if (user_match && search_match) {
+        if (post_match && user_match && search_match) {
 
           items[*count].info.c = current->info.root->info;
           items[*count].type = ITEM_TYPE_COMMENT;
@@ -130,7 +130,6 @@ Item *generate_top_comments_array(CommentTreeList comment_list,
               get_vote_sum(vote_list, items[*count].id, VOTE_TARGET_COMMENT);
           (*count)++;
         }
-      }
     }
     current = current->next;
   }
