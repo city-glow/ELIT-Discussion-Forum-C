@@ -67,6 +67,25 @@ bool post_matches_search(Post post, const char *search_term) {
   return false;
 }
 
+bool comment_matches_search(Comment post, const char *search_term) {
+  if (!search_term || strlen(search_term) == 0)
+    return true;
+
+  char buffer[256];
+  strncpy(buffer, search_term, sizeof(buffer));
+  buffer[sizeof(buffer) - 1] = '\0';
+
+  char *token = strtok(buffer, " ");
+  while (token != NULL) {
+    if (text_contains_word(post.content, token)) {
+      return true; // match on a full word
+    }
+    token = strtok(NULL, " ");
+  }
+
+  return false;
+}
+
 bool board_matches_search(Board board, const char *search_term) {
   if (!search_term || strlen(search_term) == 0)
     return true;
@@ -87,7 +106,8 @@ bool board_matches_search(Board board, const char *search_term) {
 }
 
 Item *generate_top_comments_array(CommentTreeList comment_list,
-                                  VoteList vote_list, int *count, Id post_id) {
+                                  VoteList vote_list, int *count, Id post_id,
+                                  const char *search_term, bool sort_by_new) {
   int size = comment_tree_list_count(comment_list.first);
   Item *items = (Item *)malloc(size * sizeof(Item));
   *count = 0;
@@ -95,12 +115,17 @@ Item *generate_top_comments_array(CommentTreeList comment_list,
   while (current != NULL) {
     if (current->info.root != NULL) {
       if (current->info.post_id == post_id) {
-        items[*count].info.c = current->info.root->info;
-        items[*count].type = ITEM_TYPE_COMMENT;
-        items[*count].id = current->info.root->info.id;
-        items[*count].vote_sum =
-            get_vote_sum(vote_list, items[*count].id, VOTE_TARGET_COMMENT);
-        (*count)++;
+        bool search_match =
+            comment_matches_search(current->info.root->info, search_term);
+        if (search_match) {
+
+          items[*count].info.c = current->info.root->info;
+          items[*count].type = ITEM_TYPE_COMMENT;
+          items[*count].id = current->info.root->info.id;
+          items[*count].vote_sum =
+              get_vote_sum(vote_list, items[*count].id, VOTE_TARGET_COMMENT);
+          (*count)++;
+        }
       }
     }
     current = current->next;

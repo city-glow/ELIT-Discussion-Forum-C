@@ -32,11 +32,12 @@
 // Utility/UI Helper Functions
 // =======================
 void ui_clear_screen() {
-#ifdef _WIN32
-  system("cls");
-#else
-  system("clear");
-#endif
+// #ifdef _WIN32
+//   system("cls");
+// #else
+//   system("clear");
+// #endif
+// for college requirements
 }
 
 void ui_pause() {
@@ -254,7 +255,7 @@ int ui_show_post(Post post, User poster, Board board, int vote_sum,
 
 void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
                           int total_items, int offset, User logged_user,
-                          CommentTreeList comment_tree_list) {
+                          CommentTreeList comment_tree_list, bool search, bool sort_by_new) {
   ui_clear_screen();
   printf("========================================\n");
   printf("-- Top Comments\n");
@@ -293,6 +294,16 @@ void display_top_comments(Item *items, UserList user_list, VoteList vote_list,
     printf("P. Previous Page\n");
   if (offset + 10 < total_items)
     printf("N. Next Page\n");
+  if (sort_by_new) {
+    printf("S. Sort by name\n");
+  } else {
+    printf("S. Sort by new\n");
+  }
+  if (search) {
+    printf("Q. Delete search query\n");
+  } else {
+    printf("Q. Search\n");
+  }
   printf("0. Kembali\n");
 
   printf("========================================\n");
@@ -643,6 +654,7 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
 
         search_term = strdup(content);
       } else {
+        free(search_term);
         search_term = strdup("");
       }
     } else if (choice[0] == 'W' && board_id != -1) {
@@ -746,14 +758,24 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
 
       comment_tree_list_insert(comment_tree_list, new_comment_node);
     } else if (menu_choice == 3) {
-      int total_items, offset = 0;
-      Item *top_comments = generate_top_comments_array(
-          *comment_tree_list, *vote_list, &total_items, post_id);
       int exit_comments = 0;
+      char *search_term = "";
+      int total_items, offset = 0;
+      bool sort_by_new = false;
       while (!exit_comments) {
+        bool search_bool = false;
+        if (strcmp(search_term, "") != 0) {
+          search_bool = true;
+        }
+        int total_items, offset = 0;
+        Item *top_comments = generate_top_comments_array(
+            *comment_tree_list, *vote_list, &total_items, post_id, search_term,
+            sort_by_new);
         ui_clear_screen();
+
         display_top_comments(top_comments, *user_list, *vote_list, total_items,
-                             offset, logged_user, *comment_tree_list);
+                             offset, logged_user, *comment_tree_list,
+                             search_bool, sort_by_new);
         char choice[10];
         fgets(choice, sizeof(choice), stdin);
         choice[strcspn(choice, "\n")] = 0;
@@ -764,6 +786,21 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
         } else if (choice[0] == '0') {
           exit_comments = 1;
           ui_clear_screen();
+        } else if (choice[0] == 'Q') {
+          if (strcmp(search_term, "") == 0) {
+
+            char content[1025];
+            printf("Masukkan search (maksimal 1024 karakter):\n");
+            fgets(content, sizeof(content), stdin);
+            content[strcspn(content, "\n")] = 0;
+
+            search_term = strdup(content);
+          } else {
+            free(search_term);
+            search_term = strdup("");
+          }
+        } else if (choice[0] == 'S') {
+          sort_by_new = !sort_by_new;
         } else {
           int selected = atoi(choice);
           if (selected > 0 && selected <= 10 &&
@@ -773,9 +810,9 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
                                      post_list, logged_user);
           }
         }
+        free(top_comments);
       }
       ui_clear_screen();
-      free(top_comments);
     } else if (menu_choice == 4 && logged_user.id == this_post->info.user_id) {
       printf("Post dan seluruh komentarnya akan dihapus. Apakah anda "
              "yakin? (y/n): ");
