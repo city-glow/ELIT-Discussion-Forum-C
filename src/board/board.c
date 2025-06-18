@@ -43,29 +43,40 @@ bool board_is_moderator(Board *board, Id user_id) {
     return board->owner_id == user_id;
 }
 
-void board_add_moderate_request(Board *board, Id request_id) {
+void board_add_moderate_request(Board *board, Id request_id, Id user_id) {
     ModerateRequest request = {0};
     request.request_id = request_id;
-    request.user_id = 0; // or set appropriately
+    request.user_id = user_id;
     request.board_id = board->id;
     request.is_approved = false;
     moderate_queue_enqueue(&board->queue, request);
 }
 
 // Approve a moderation request by request_id
-bool board_approve_moderate_request(Board *board, Id request_id, ModerateList *moderateList) {
+bool board_approve_moderate_request(Board *board, Id request_id, ModerateList *moderateList, PostList *postList) {
     ModerateAddress modNode = moderate_search_by_id(moderateList->first, request_id);
     if (modNode == NULL) {
         return false; // Request not found
     }
     modNode->info.is_approved = true;
+
+    // Set the corresponding post as approved
+    PostAddress postNode = post_search_by_id(postList->first, request_id);
+    if (postNode != NULL) {
+        postNode->info.approved = true;
+    }
+
     moderate_queue_remove_by_id(&board->queue, request_id);
     return true;
 }
 
 // Reject a moderation request by request_id
-bool board_reject_moderate_request(Board *board, Id request_id) {
-    // Just remove from queue, no approval
+bool board_reject_moderate_request(Board *board, Id request_id, PostList *postList) {
+    // Remove the post associated with the request
+    Post X;
+    post_delete_by_id(postList, request_id, &X, NULL, NULL);
+
+    // Remove from queue
     moderate_queue_remove_by_id(&board->queue, request_id);
     return true;
 }

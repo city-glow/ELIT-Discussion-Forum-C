@@ -35,6 +35,7 @@ int main() {
   UserList user_list;
   BoardList board_list;
   PostList post_list;
+  ModerateList moderate_list;
   VoteList vote_list;
   CommentTreeList comment_tree_list;
   NavigationStack nav_stack;
@@ -50,6 +51,7 @@ int main() {
   load_vote_list(&vote_list, "../storage/votes.dat");
   load_board_list(&board_list, "../storage/boards.dat");
   load_post_list(&post_list, "../storage/posts.dat");
+  moderate_create_list(&moderate_list);
 
   int pilihan;
   User logged_user;
@@ -142,7 +144,7 @@ int main() {
             is_logged_in = true;
             try_again = 0;
             // PANGGIL FUNGSI NAVIGASI
-            resume_last_navigation(&nav_stack, &logged_user, &board_list, &post_list,&user_list, &vote_list, &comment_tree_list);
+            resume_last_navigation(&nav_stack, &logged_user, &board_list, &post_list, &moderate_list, &user_list, &vote_list, &comment_tree_list);
           } else {
             printf("Coba lagi? (y/n): ");
             char yn[8];
@@ -158,8 +160,8 @@ int main() {
       }
     } else {
       // Already logged in (persistent login)
-      handle_dashboard(&board_list, &post_list, &user_list, &vote_list,
-                 &comment_tree_list, &logged_user, &nav_stack);
+      handle_dashboard(&board_list, &post_list, &moderate_list, &user_list, &vote_list,
+                       &comment_tree_list, &logged_user, &nav_stack);
       printf("Logout berhasil.\n");
       is_logged_in = false;
       save_navigation_stack(nav_stack, "../storage/navigation.dat");

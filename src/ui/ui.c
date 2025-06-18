@@ -492,8 +492,7 @@ int ui_show_single_comment(Comment comment, bool has_parent,
 
 
 // Function to handle moderation queue UI for a selected board
-void handle_moderate_queue(BoardList *board_list, PostList *post_list, User logged_user) {
-  (void)post_list; // mengatasi unusued parametere warning tapi ini beneran parametere PostList ga kepake disini?
+void handle_moderate_queue(BoardList *board_list, PostList *post_list, ModerateList *moderate_list, User logged_user) {
   ui_clear_screen();
   printf("========================================\n");
   printf("         MODERATE POST QUEUE            \n");
@@ -534,12 +533,7 @@ void handle_moderate_queue(BoardList *board_list, PostList *post_list, User logg
   BoardAddress selected_board = owned_boards[choice - 1];
 
   // Load the moderation queue for the selected board
-  ModerateQueue queue;
-  moderate_queue_create(&queue);
-
-  // TODO: Load the actual queue data from storage or board data
-  // For now, simulate loading queue items (this should be replaced with actual loading logic)
-  // Example: moderate_queue_enqueue(&queue, some_moderate_request);
+  ModerateQueue queue = selected_board->info.queue;
 
   int exit_moderation = 0;
   while (!exit_moderation) {
@@ -599,15 +593,17 @@ void handle_moderate_queue(BoardList *board_list, PostList *post_list, User logg
     getchar();
 
     if (action == 'a' || action == 'A') {
-      // TODO: Approve the post request
-      printf("Request approved.\n");
-      // Remove from queue and add to post list
-      // moderate_queue_dequeue(&queue, &selected_request->info);
+      if (board_approve_moderate_request(&selected_board->info, selected_request->info.request_id, moderate_list, post_list)) {
+        printf("Request approved.\n");
+      } else {
+        printf("Failed to approve request.\n");
+      }
     } else if (action == 'r' || action == 'R') {
-      // TODO: Reject the post request
-      printf("Request rejected.\n");
-      // Remove from queue
-      // moderate_queue_dequeue(&queue, &selected_request->info);
+      if (board_reject_moderate_request(&selected_board->info, selected_request->info.request_id, post_list)) {
+        printf("Request rejected.\n");
+      } else {
+        printf("Failed to reject request.\n");
+      }
     } else {
       printf("Invalid action.\n");
     }
@@ -618,6 +614,7 @@ void handle_moderate_queue(BoardList *board_list, PostList *post_list, User logg
 
 void handle_dashboard(BoardList *board_list,
                       PostList *post_list,
+                      ModerateList *moderate_list,
                       UserList *user_list,
                       VoteList *vote_list,
                       CommentTreeList *comment_tree_list,
@@ -645,14 +642,29 @@ void handle_dashboard(BoardList *board_list,
         PostAddress post_node;
         post_create_node(&post_node);
         post_isi_node(&post_node, *new_post);
+
+        // Check if user is board owner
+        BoardAddress board = board_search_by_id(board_list->first, new_post->board_id);
+        if (board != NULL && board->info.owner_id == logged_user->id) {
+          // Owner posts are auto-approved
+          post_node->info.approved = true;
+        } else {
+          // Non-owner posts require moderation
+          post_node->info.approved = false;
+          // Create moderation request and add to board queue
+          if (board != NULL) {
+            board_add_moderate_request(&board->info, post_node->info.id, logged_user->id);
+          }
+        }
+
         post_insert(post_list, post_node);
         free(new_post->content);
         free(new_post);
       }
 
     } else if (dashboard_choice == 2) {
-      navigation_stack_push(nav_stack, "moderate_queue");
-      handle_moderate_queue(board_list, post_list, *logged_user);
+    navigation_stack_push(nav_stack, "moderate_queue");
+    handle_moderate_queue(board_list, post_list, moderate_list, *logged_user);
 
     } else if (dashboard_choice == 3) {
       // See Profile
@@ -869,6 +881,21 @@ void handle_posts_page(PostList *post_list, VoteList *vote_list,
         PostAddress post_node;
         post_create_node(&post_node);
         post_isi_node(&post_node, *new_post);
+
+        // Check if user is board owner
+        BoardAddress board = board_search_by_id(board_list->first, new_post->board_id);
+        if (board != NULL && board->info.owner_id == logged_user.id) {
+          // Owner posts are auto-approved
+          post_node->info.approved = true;
+        } else {
+          // Non-owner posts require moderation
+          post_node->info.approved = false;
+          // Create moderation request and add to board queue
+          if (board != NULL) {
+            board_add_moderate_request(&board->info, post_node->info.id, logged_user.id);
+          }
+        }
+
         post_insert(post_list, post_node);
         free(new_post->content);
         free(new_post);
@@ -967,7 +994,7 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
     } else if (menu_choice == 3) {
       handle_top_comments_page(post_list, vote_list, logged_user, user_list,
                                comment_tree_list, -1, post_id);
-    } else if (menu_choice == 4 && logged_user.id == this_post->info.user_id) {
+    } else if (menu_choice == 4 && (logged_user.id == this_post->info.user_id || logged_user.id == board->info.owner_id)) {
       printf("Post dan seluruh komentarnya akan dihapus. Apakah anda "
              "yakin? (y/n): ");
       char choice_line[8]; // small buffer
@@ -983,7 +1010,9 @@ void handle_post_page(Id post_id, PostList *post_list, VoteList *vote_list,
     PostAddress this_post = post_search_by_id(post_list->first, post_id);
     UserAddress poster =
         user_search_by_id(user_list->first, this_post->info.user_id);
-    if (this_post->info.user_id == poster->info.id) {
+    BoardAddress board =
+        board_search_by_id(board_list->first, this_post->info.board_id);
+    if (this_post->info.user_id == poster->info.id || logged_user.id == board->info.owner_id) {
       Post X;
       post_delete_by_id(post_list, this_post->info.id, &X, vote_list,
                         comment_tree_list);
@@ -1196,19 +1225,19 @@ void handle_single_comment_page(Id comment_id, PostList *post_list,
   }
 }
 
-void resume_last_navigation(NavigationStack *nav_stack, User *logged_user,BoardList *board_list, PostList *post_list,UserList *user_list, VoteList *vote_list,CommentTreeList *comment_tree_list) {
+void resume_last_navigation(NavigationStack *nav_stack, User *logged_user, BoardList *board_list, PostList *post_list, ModerateList *moderate_list, UserList *user_list, VoteList *vote_list, CommentTreeList *comment_tree_list) {
   char *last_page = navigation_stack_top(*nav_stack);
   if (last_page != NULL) {
     if (strcmp(last_page, "dashboard") == 0) {
-      handle_dashboard(board_list, post_list, user_list, vote_list,comment_tree_list, logged_user, nav_stack);
+      handle_dashboard(board_list, post_list, moderate_list, user_list, vote_list, comment_tree_list, logged_user, nav_stack);
     } else if (strcmp(last_page, "trending") == 0) {
-      handle_posts_page(post_list, vote_list, *logged_user, user_list,board_list, comment_tree_list, -1, -1);
+      handle_posts_page(post_list, vote_list, *logged_user, user_list, board_list, comment_tree_list, -1, -1);
     } else if (strcmp(last_page, "boards") == 0) {
-      handle_boards_page(post_list, vote_list, *logged_user, user_list,board_list, comment_tree_list, -1);
+      handle_boards_page(post_list, vote_list, *logged_user, user_list, board_list, comment_tree_list, -1);
     } else if (strcmp(last_page, "profile") == 0) {
       handle_profile(*logged_user, post_list, vote_list, user_list, board_list, comment_tree_list, nav_stack);
     } else if (strcmp(last_page, "moderate_queue") == 0) {
-      handle_moderate_queue(board_list, post_list, *logged_user);
+      handle_moderate_queue(board_list, post_list, moderate_list, *logged_user);
     } else if (strcmp(last_page, "post") == 0) {
       // Handle post page
       Id post_id = navigation_stack_get_last_post_id(nav_stack);
@@ -1217,15 +1246,14 @@ void resume_last_navigation(NavigationStack *nav_stack, User *logged_user,BoardL
       // Handle comment page
       Id comment_id = navigation_stack_get_last_comment_id(nav_stack);
       handle_single_comment_page(comment_id, post_list, vote_list, *logged_user, user_list, comment_tree_list);
-
     } else {
       // Fallback
       navigation_stack_push(nav_stack, "dashboard");
-      handle_dashboard(board_list, post_list, user_list, vote_list,comment_tree_list, logged_user, nav_stack);
+      handle_dashboard(board_list, post_list, moderate_list, user_list, vote_list, comment_tree_list, logged_user, nav_stack);
     }
   } else {
     navigation_stack_push(nav_stack, "dashboard");
-    handle_dashboard(board_list, post_list, user_list, vote_list,comment_tree_list, logged_user, nav_stack);
+    handle_dashboard(board_list, post_list, moderate_list, user_list, vote_list, comment_tree_list, logged_user, nav_stack);
   }
 }
 
