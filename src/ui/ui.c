@@ -533,7 +533,7 @@ void handle_moderate_queue(BoardList *board_list, PostList *post_list, ModerateL
   BoardAddress selected_board = owned_boards[choice - 1];
 
   // Load the moderation queue for the selected board
-  ModerateQueue queue = selected_board->info.queue;
+  ModerateQueue *queue = &selected_board->info.queue;
 
   int exit_moderation = 0;
   while (!exit_moderation) {
@@ -541,65 +541,36 @@ void handle_moderate_queue(BoardList *board_list, PostList *post_list, ModerateL
     printf("Moderation queue for board: %s\n", selected_board->info.title);
     printf("========================================\n");
 
-    if (moderate_queue_is_empty(queue)) {
+    if (moderate_queue_is_empty(*queue)) {
       printf("No posts waiting for moderation.\n");
       ui_pause();
       break;
     }
 
-    // Display queue items
-    ModerateQueueAddress current = queue.front;
-    int index = 1;
-    while (current != NULL) {
-      printf("%d. Request ID: %d, User ID: %d, Approved: %s\n", index,
-             current->info.request_id, current->info.user_id,
-             current->info.is_approved ? "Yes" : "No");
-      current = current->next;
-      index++;
-    }
+    // Display only the first request in the queue (FIFO)
+    ModerateQueueAddress current = queue->front;
+    printf("Request ID: %d, User ID: %d, Approved: %s\n",
+           current->info.request_id, current->info.user_id,
+           current->info.is_approved ? "Yes" : "No");
 
-    printf("Select a request to moderate (0 to cancel): ");
-    int choice;
-    scanf("%d", &choice);
-    getchar();
-
-    if (choice == 0) {
-      exit_moderation = 1;
-      continue;
-    }
-
-    // Find the selected request
-    current = queue.front;
-    index = 1;
-    ModerateQueueAddress selected_request = NULL;
-    while (current != NULL) {
-      if (index == choice) {
-        selected_request = current;
-        break;
-      }
-      current = current->next;
-      index++;
-    }
-
-    if (selected_request == NULL) {
-      printf("Invalid selection.\n");
-      ui_pause();
-      continue;
-    }
-
-    printf("Approve (a) or Reject (r) the request? ");
+    printf("Approve (a) or Reject (r) the request? (q to quit): ");
     char action;
     scanf(" %c", &action);
     getchar();
 
+    if (action == 'q' || action == 'Q') {
+      exit_moderation = 1;
+      continue;
+    }
+
     if (action == 'a' || action == 'A') {
-      if (board_approve_moderate_request(&selected_board->info, selected_request->info.request_id, moderate_list, post_list)) {
+      if (board_approve_moderate_request(&selected_board->info, current->info.request_id, moderate_list, post_list)) {
         printf("Request approved.\n");
       } else {
         printf("Failed to approve request.\n");
       }
     } else if (action == 'r' || action == 'R') {
-      if (board_reject_moderate_request(&selected_board->info, selected_request->info.request_id, post_list)) {
+      if (board_reject_moderate_request(&selected_board->info, current->info.request_id, post_list)) {
         printf("Request rejected.\n");
       } else {
         printf("Failed to reject request.\n");

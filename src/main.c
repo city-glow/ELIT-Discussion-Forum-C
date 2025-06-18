@@ -53,6 +53,21 @@ int main() {
   load_post_list(&post_list, "../storage/posts.dat");
   moderate_create_list(&moderate_list);
 
+  // Populate moderate_list from all boards' queues
+  BoardAddress curr_board = board_list.first;
+  while (curr_board != NULL) {
+    ModerateQueueAddress curr_req = curr_board->info.queue.front;
+    while (curr_req != NULL) {
+      ModerateAddress new_node;
+      moderate_create_node(&new_node);
+      ModerateRequest req = curr_req->info;
+      moderate_isi_node(&new_node, req);
+      moderate_insert(&moderate_list, new_node);
+      curr_req = curr_req->next;
+    }
+    curr_board = curr_board->next;
+  }
+
   int pilihan;
   User logged_user;
   bool is_logged_in = false;

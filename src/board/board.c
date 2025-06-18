@@ -70,11 +70,10 @@ bool board_approve_moderate_request(Board *board, Id request_id, ModerateList *m
     return true;
 }
 
-// Reject a moderation request by request_id
-bool board_reject_moderate_request(Board *board, Id request_id, PostList *postList) {
+bool board_reject_moderate_request(Board *board, Id request_id, PostList *postList, VoteList *vote_list, CommentTreeList *comment_tree_list) {
     // Remove the post associated with the request
     Post X;
-    post_delete_by_id(postList, request_id, &X, NULL, NULL);
+    post_delete_by_id(postList, request_id, &X, vote_list, comment_tree_list);
 
     // Remove from queue
     moderate_queue_remove_by_id(&board->queue, request_id);
